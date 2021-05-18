@@ -4,8 +4,12 @@ from random import randint
 
 api = api_utils.API()
 
-@api.GET("/api")
+@api.GET("/api/")
 def hello_world(request):
-    return f"   ---   Hello World   ---   Random number: {randint(1, 100)}   ---   Time: {dt.now().hour}:{dt.now().minute}:{dt.now().second}   ---   "
+    return "Hello World"
+
+@api.POST("/api/")
+def toUpper(request, text:str):
+    return text.upper()
 
 api_utils.run(api)
