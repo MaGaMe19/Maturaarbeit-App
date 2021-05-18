@@ -1,0 +1,24 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dummy UI</title>
+    <script src="https://unpkg.com/axios"></script>
+    <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body style="font-family: monospace">
+    <script>
+        async function start() {
+            /*  axios schickt eine GET-request an den Server,
+                await wartet bis die response zurück kommt
+                data ist die antwort des Servers
+                das Ganze muss in einer async Funktion
+            */
+            var resp = await axios.get("/api/");
+            document.body.innerHTML = resp.data;
+        }
+        start();
+    </script>
+</body>
+</html>
