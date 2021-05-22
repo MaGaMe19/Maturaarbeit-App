@@ -1,15 +1,43 @@
-import api_utils;
-from datetime import datetime as dt
-from random import randint
+import json
+import api_utils
+import json
 
 api = api_utils.API()
+filename = "data.json"
+
+# prepare data.json
+with open(filename, "w") as f:
+    json.dump([], f)
+    f.close()
 
 @api.GET("/api/")
-def hello_world(request):
-    return "Hello World"
+def get(request):
+    # get current list and send to webpage
+    with open(filename) as f:
+        entryList = json.load(f)
+        f.close()
+    return entryList
 
 @api.POST("/api/")
-def toUpper(request, text:str):
-    return text.upper()
+def post(request, text:str):
+    # get current list and add new element
+    with open(filename) as f:
+        entryList = json.load(f)
+        f.close()
+    entryList.append(text)
+
+    # dump new list into data.json
+    with open("data.json", "w") as f:
+        json.dump(entryList, f, indent=4)
+        f.close()
+
+    return text
+
+# clear list
+@api.DELETE("/api/")
+def delete(request):
+    with open(filename, "w") as f:
+        json.dump([], f)
+        f.close()
 
 api_utils.run(api)
