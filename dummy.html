@@ -6,19 +6,105 @@
     <title>Dummy UI</title>
     <script src="https://unpkg.com/axios"></script>
     <script src="https://unpkg.com/vue@next"></script>
-</head>
-<body style="font-family: monospace">
-    <script>
-        async function start() {
-            /*  axios schickt eine GET-request an den Server,
-                await wartet bis die response zurück kommt
-                data ist die antwort des Servers
-                das Ganze muss in einer async Funktion
-            */
-            var resp = await axios.get("/api/");
-            document.body.innerHTML = resp.data;
+    <style>
+        body {
+            padding: 20px 0 0 30px;
+            background-color: #0e0e0e;
+            color: white;
         }
-        start();
+        h1 {
+            border-bottom: 2px solid white;
+            padding-bottom: 10px;
+        }
+        * {
+            font-family: monospace;
+            outline: none;
+        }
+        input {
+            margin: 10px 5px 10px 0;
+            background-color: #3d3d3d;
+            padding: 7px;
+            color: white;
+            border: 1px solid #bebebe;
+            border-radius: 3px;
+        }
+        input:focus {
+            border: 1px solid white;
+        }
+        ::placeholder {
+            color: #bebebe;
+        }
+        button {
+            background-color: #3d3d3d;
+            padding: 7px;
+            color: white;
+            border: 1px solid #bebebe;
+            border-radius: 3px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        button:active {
+            border: 1px solid white;
+        }
+        ul {
+            margin: 0;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Dummy Front-End</h1>
+        <input type="text" v-model="input" v-on:keyup.enter="clickPost()" placeholder="Type something...">
+        <button v-on:click="post()" id="postButton">POST</button>
+        <button v-on:click="clear()" style="color:#ff4343">CLEAR</button>
+        <ul>
+            <li v-for="item in output">{{item}}</li>
+        </ul>
+    </div>
+    <script>
+        var ref = Vue.ref;
+        Vue.createApp({
+            setup() {
+                var input = ref("");
+                var output = ref([]);
+
+                async function get() {
+                    /*  Funktionsweise:
+
+                        - axios schickt eine request an den Server,
+                        - await wartet bis die response zurück kommt
+                        - data ist die antwort des Servers
+                        - das Ganze muss in einer async Funktion ablaufen
+                    */
+                    var resp = await axios.get("/api/");
+                    output.value = resp.data;
+                }
+                get();
+
+                async function post() {
+                    var resp = await axios.post("/api/", {text: input.value});
+                    output.value.push(resp.data);
+                }
+
+                var clickPost = () => document.querySelector("#postButton").click();
+
+                async function clear() {
+                    var resp = await axios.delete("/api/");
+                    get();
+                }
+
+                return {
+                    post,
+                    input,
+                    output,
+                    clickPost,
+                    clear,
+                }
+            }
+        }).mount("#app");
     </script>
 </body>
 </html>
