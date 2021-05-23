@@ -3,31 +3,32 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dummy UI</title>
+    <title>Front-End</title>
     <script src="https://unpkg.com/axios"></script>
     <script src="https://unpkg.com/vue@next"></script>
     <style>
         body {
-            padding: 30px;
+            padding: 15px 5vw 0 5vw;
             background-color: #0e0e0e;
             color: white;
         }
         h1 {
             border-bottom: 2px solid white;
             padding-bottom: 10px;
-            font-size: 3em;
+            font-size: 7vw;
         }
         * {
             font-family: monospace;
             outline: none;
         }
         input {
-            margin: 10px 5px 10px 0;
+            margin: 10px 5px 20px 0;
             background-color: #3d3d3d;
-            padding: 7px;
+            padding: 5px;
             color: white;
             border: 1px solid #bebebe;
             border-radius: 3px;
+            width: 55vw;
         }
         input:focus {
             border: 1px solid white;
@@ -37,7 +38,7 @@
         }
         button {
             background-color: #3d3d3d;
-            padding: 7px;
+            padding: 5px;
             color: white;
             border: 1px solid #bebebe;
             border-radius: 3px;
@@ -48,27 +49,68 @@
             border: 1px solid white;
         }
         ul {
-            margin: 0;
+            margin: 0 0 50px 0;
+            list-style: none;
+        }
+        li:first-child {
+            margin-top: 15px;
         }
         li {
-            margin-bottom: 5px;
+            margin: 5px 0 0 -15px;
+        }
+        .red {
+            color: #ff4343
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <h1>Dummy Front-End</h1>
-        <input type="text" v-model="input" v-on:keyup.enter="clickPost()" placeholder="Type something...">
-        <button v-on:click="post()" id="postButton">POST</button>
-        <button v-on:click="clear()" style="color:#ff4343">CLEAR</button>
-        <ul>
-            <li v-for="item in output">{{item}}</li>
-        </ul>
+        <div v-if="loggedIn">
+            <h1>Front-End - {{username}}</h1>
+            <input type="text" v-model="input" v-on:keyup.enter="clickPost()" placeholder="Neue Nachricht">
+            <button v-on:click="post()" id="postButton">POST</button>
+            <button v-on:click="clear()" class="red">CLEAR</button>
+            <div>Nachrichten:</div>
+            <ul>
+                <li v-for="item in output">{{item}}</li>
+            </ul>
+            <button v-on:click="logOut()" class="red">LOG OUT</button>
+        </div>
+        <div v-else>
+            <h1>Hallo</h1>
+            <input type="text" placeholder="Dein Name" v-model="usernameInput" v-on:keyup.enter="saveUsername()">
+            <button style="color:#00b300" v-on:click="saveUsername()">SAVE</button>
+        </div>
     </div>
     <script>
+        /*
+        TODO:
+        - name input                    done
+        - add name to messages          done
+        - store name in localstorage    done
+        - reload all clients on post
+        */
+
         var ref = Vue.ref;
+        var computed = Vue.computed;
+
         Vue.createApp({
             setup() {
+                /* ================================= username handling ================================= */
+                let username = ref(localStorage.getItem("username"));
+                let loggedIn = computed(function () {
+                    return username.value != null;
+                })
+
+                let usernameInput = ref("");
+
+                function saveUsername() {
+                    username.value = usernameInput.value;
+                    localStorage.setItem("username", username.value);
+                    location.reload();
+                }
+
+                /* =================================== get and post ==================================== */
                 var input = ref("");
                 var output = ref([]);
 
@@ -86,10 +128,14 @@
                 get();
 
                 async function post() {
-                    var resp = await axios.post("/api/", {text: input.value});
-                    output.value.push(resp.data);
+                    if (input.value != "") {
+                        var resp = await axios.post("/api/", {text: input.value, name: username.value});
+                        get();
+                        input.value = "";
+                    }
                 }
 
+                /* ================================= utility functions ================================= */
                 var clickPost = () => document.querySelector("#postButton").click();
 
                 async function clear() {
@@ -97,12 +143,23 @@
                     get();
                 }
 
+                function logOut() {
+                    localStorage.removeItem("username");
+                    location.reload();
+                }
+                
+                /* ====================================== return ======================================= */
                 return {
                     post,
                     input,
                     output,
                     clickPost,
                     clear,
+                    loggedIn,
+                    username,
+                    usernameInput,
+                    saveUsername,
+                    logOut,
                 }
             }
         }).mount("#app");
