@@ -18,7 +18,7 @@
             font-size: 7vw;
         }
         * {
-            font-family: monospace;
+            font-family: "Consolas", monospace;
             outline: none;
         }
         input {
@@ -67,14 +67,13 @@
     <div id="app">
         <div v-if="loggedIn">
             <h1>Front-End - {{username}}</h1>
-            <input type="text" v-model="input" v-on:keyup.enter="clickPost()" placeholder="Neue Nachricht">
+            <input type="text" v-model="input" v-on:keyup.enter="post()" placeholder="Neue Nachricht">
             <button v-on:click="post()" id="postButton">POST</button>
             <button v-on:click="clear()" class="red">CLEAR</button>
             <div>Nachrichten:</div>
             <ul>
                 <li v-for="item in output">{{item}}</li>
             </ul>
-            <button v-on:click="logOut()" class="red">LOG OUT</button>
         </div>
         <div v-else>
             <h1>Hallo</h1>
@@ -84,11 +83,9 @@
     </div>
     <script>
         /*
-        TODO:
-        - name input                    done
-        - add name to messages          done
-        - store name in localstorage    done
-        - reload all clients on post
+            TODO:
+            - Verschlüsselung
+            - Nachrichten-Headers (from, to)
         */
 
         var ref = Vue.ref;
@@ -104,10 +101,13 @@
 
                 let usernameInput = ref("");
 
-                function saveUsername() {
+                async function saveUsername() {
                     if (usernameInput.value != "") {
                         username.value = usernameInput.value;
+                        var resp = await axios.post("/api/names/", {name: username.value});
+
                         localStorage.setItem("username", username.value);
+                        localStorage.setItem("uuid", resp.data);
                         location.reload();
                     }
                 }
@@ -138,30 +138,26 @@
                 }
 
                 /* ================================= utility functions ================================= */
-                var clickPost = () => document.querySelector("#postButton").click();
-
                 async function clear() {
                     var resp = await axios.delete("/api/");
                     get();
                 }
 
-                function logOut() {
-                    localStorage.removeItem("username");
-                    location.reload();
-                }
+                /* ====================================== reload ======================================= */
+                setInterval(() => {
+                    get();
+                }, 1000);
                 
                 /* ====================================== return ======================================= */
                 return {
                     post,
                     input,
                     output,
-                    clickPost,
                     clear,
                     loggedIn,
                     username,
                     usernameInput,
                     saveUsername,
-                    logOut,
                 }
             }
         }).mount("#app");
