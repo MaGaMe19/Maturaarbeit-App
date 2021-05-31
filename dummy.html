@@ -84,8 +84,8 @@
     <script>
         /*
             TODO:
+            - Nachrichten-Headers (from, to)    DONE
             - Verschlüsselung
-            - Nachrichten-Headers (from, to)
         */
 
         var ref = Vue.ref;
@@ -131,7 +131,7 @@
 
                 async function post() {
                     if (input.value != "") {
-                        var resp = await axios.post("/api/", {text: input.value, name: username.value});
+                        var resp = await axios.post("/api/", {text: input.value, fromUser: localStorage.getItem("uuid"), toUser: "?"});
                         get();
                         input.value = "";
                     }
