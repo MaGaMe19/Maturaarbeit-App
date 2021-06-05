@@ -3,7 +3,9 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Front-End</title>
+    <title>Front End</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/axios"></script>
     <script src="https://unpkg.com/vue@next"></script>
     <style>
@@ -13,22 +15,24 @@
             color: white;
         }
         h1 {
-            border-bottom: 2px solid white;
-            padding-bottom: 10px;
-            font-size: 7vw;
+            font-size: 6vw;
+        }
+        h3 {
+            border-bottom: 1px solid white;
+            font-size: 1.3em;
         }
         * {
-            font-family: "Consolas", monospace;
+            font-family: 'Poppins', sans-serif;
             outline: none;
         }
         input {
-            margin: 10px 5px 20px 0;
+            margin: 10px 5px 5px 0;
             background-color: #3d3d3d;
             padding: 5px;
             color: white;
             border: 1px solid #bebebe;
             border-radius: 3px;
-            width: 55vw;
+            width: 50vw;
         }
         input:focus {
             border: 1px solid white;
@@ -48,30 +52,42 @@
         button:active {
             border: 1px solid white;
         }
-        ul {
-            margin: 0 0 30px 0;
+        #messageList {
             list-style: none;
         }
-        li:first-child {
-            margin-top: 15px;
-        }
-        li {
-            margin: 5px 0 0 -15px;
+        #messageList li {
+            margin: 10px 0 0 -15px;
         }
         .red {
             color: #ff4343
+        }
+        #userList li {
+            cursor: pointer;
+
+        }
+        #uuid {
+            font-size: 0.65em;
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
     <div id="app">
         <div v-if="loggedIn">
-            <h1>Front-End - {{username}}</h1>
+            <h1>Front End - {{username}}</h1>
+            <h3>Benutzer</h3>
+            <ul id="userList">
+                <li v-for="(user, uuid) in userList" v-on:click="setToUser(user, uuid)">
+                    {{user}}
+                    <div id="uuid">id: {{uuid}}</div>
+                </li>
+            </ul>
             <input type="text" v-model="input" v-on:keyup.enter="post()" placeholder="Neue Nachricht">
             <button v-on:click="post()" id="postButton">POST</button>
             <button v-on:click="clear()" class="red">CLEAR</button>
-            <div>Nachrichten:</div>
-            <ul>
+            <div style="font-size: 0.8em; color: #b4b4b4">An: {{toUser}}</div>
+            <h3>Nachrichten</h3>
+            <ul id="messageList">
                 <li v-for="item in output">{{item}}</li>
             </ul>
         </div>
@@ -84,8 +100,8 @@
     <script>
         /*
             TODO:
-            - Nachrichten-Headers (from, to)    DONE
-            - Verschlüsselung
+            - Gesprächspartner-Auswahl: users.json auf front-end laden -> aus liste auswählen   DONE
+            - Verschlüsselung: foto
         */
 
         var ref = Vue.ref;
@@ -100,16 +116,30 @@
                 })
 
                 let usernameInput = ref("");
+                let userList = ref([]);
+
+                async function getUsernames() {
+                    var resp = await axios.get("/api/users/");
+                    userList.value = resp.data;
+                }
+                getUsernames();
 
                 async function saveUsername() {
                     if (usernameInput.value != "") {
                         username.value = usernameInput.value;
-                        var resp = await axios.post("/api/names/", {name: username.value});
+                        var resp = await axios.post("/api/users/", {name: username.value});
 
                         localStorage.setItem("username", username.value);
                         localStorage.setItem("uuid", resp.data);
                         location.reload();
                     }
+                }
+
+                let toUser = ref("Alle");
+                let toUserUuid = ref("?");
+                function setToUser(user, uuid) {
+                    toUser.value = user;
+                    toUserUuid.value = uuid;
                 }
 
                 /* =================================== get and post ==================================== */
@@ -131,7 +161,7 @@
 
                 async function post() {
                     if (input.value != "") {
-                        var resp = await axios.post("/api/", {text: input.value, fromUser: localStorage.getItem("uuid"), toUser: "?"});
+                        var resp = await axios.post("/api/", {text: input.value, fromUser: localStorage.getItem("uuid"), toUser: toUserUuid.value});
                         get();
                         input.value = "";
                     }
@@ -143,10 +173,7 @@
                     get();
                 }
 
-                /* ====================================== reload ======================================= */
-                setInterval(() => {
-                    get();
-                }, 1000);
+                setInterval(() => get(), 1000); // reload
                 
                 /* ====================================== return ======================================= */
                 return {
@@ -158,6 +185,10 @@
                     username,
                     usernameInput,
                     saveUsername,
+                    getUsernames,
+                    userList,
+                    setToUser,
+                    toUser,
                 }
             }
         }).mount("#app");

@@ -22,7 +22,7 @@ if not os.path.exists(filenameUsers):
 @api.GET("/api/")
 def get(request):
     # get current userlist to look up names
-    with open (filenameUsers) as f:
+    with open(filenameUsers) as f:
         userList = json.load(f)
     # get current datalist
     with open(filename) as f:
@@ -39,13 +39,11 @@ def post(request, text:str, fromUser:str, toUser:str):
     with open(filename) as f:
         entryList = json.load(f)
     # construct message with headers
-    entryList.append(
-        {
+    entryList.append({
             "from": fromUser,
             "to": toUser,
             "message": text
-        }
-    )
+        })
 
     # dump updated list into data.json
     with open("data.json", "w") as f:
@@ -53,9 +51,17 @@ def post(request, text:str, fromUser:str, toUser:str):
 
     return None
 
+# return userList to front-end for connections
+@api.GET("/api/users/")
+def getUsers(request):
+    with open(filenameUsers) as f:
+        userList = json.load(f)
+    
+    return userList
+
 # collect users
-@api.POST("/api/names/")
-def saveUser(request, name:str):
+@api.POST("/api/users/")
+def saveUsers(request, name:str):
     newUuid = str(uuid4()) # create uuid (Universal Unique IDentification)
     with open(filenameUsers) as f:
         userList = json.load(f)
