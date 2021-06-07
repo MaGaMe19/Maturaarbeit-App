@@ -21,28 +21,22 @@ if not os.path.exists(filenameUsers):
 
 @api.GET("/api/")
 def get(request):
-    # get current userlist to look up names
-    with open(filenameUsers) as f:
-        userList = json.load(f)
     # get current datalist
     with open(filename) as f:
         dataList = json.load(f)
-        messageList = [] # construct separate list for formatted messages
-        for listEntry in dataList:
-            # look up names in userList and format message accordingly
-            messageList.append(f'{userList[listEntry["from"]]} -> {userList[listEntry["to"]]}: {listEntry["message"]}')
-    return messageList
+    return dataList
 
 @api.POST("/api/")
-def post(request, text:str, fromUser:str, toUser:str):
+def post(request, content:str, fromUser:str, toUser:str, type:str):
     # get current list and add new element
     with open(filename) as f:
         entryList = json.load(f)
     # construct message with headers
     entryList.append({
+            "type": type,
             "from": fromUser,
             "to": toUser,
-            "message": text
+            "content": content
         })
 
     # dump updated list into data.json

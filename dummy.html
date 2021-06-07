@@ -24,6 +24,7 @@
         * {
             font-family: 'Poppins', sans-serif;
             outline: none;
+            font-size: 1.01em;
         }
         input {
             margin: 10px 5px 5px 0;
@@ -155,13 +156,17 @@
                         - das Ganze muss in einer async Funktion ablaufen
                     */
                     var resp = await axios.get("/api/");
-                    output.value = resp.data;
+                    let messageList = [];
+                    for (const listEntry of resp.data) {
+                        messageList.push(`${userList.value[listEntry["from"]]} -> ${userList.value[listEntry["to"]]}: ${listEntry["content"]}`)
+                        output.value = messageList;
+                    }
                 }
                 get();
 
                 async function post() {
                     if (input.value != "") {
-                        var resp = await axios.post("/api/", {text: input.value, fromUser: localStorage.getItem("uuid"), toUser: toUserUuid.value});
+                        var resp = await axios.post("/api/", {type:"message", content: input.value, fromUser: localStorage.getItem("uuid"), toUser: toUserUuid.value});
                         get();
                         input.value = "";
                     }
@@ -173,7 +178,7 @@
                     get();
                 }
 
-                setInterval(() => get(), 1000); // reload
+                setInterval(() => (get(), getUsernames()), 1000); // reload
                 
                 /* ====================================== return ======================================= */
                 return {
