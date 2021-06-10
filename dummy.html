@@ -24,7 +24,7 @@
         * {
             font-family: 'Poppins', sans-serif;
             outline: none;
-            font-size: 1.01em;
+            font-size: 0.99em;
         }
         input {
             margin: 10px 5px 5px 0;
@@ -41,7 +41,7 @@
         ::placeholder {
             color: #bebebe;
         }
-        button {
+        button:enabled {
             background-color: #3d3d3d;
             padding: 5px;
             color: white;
@@ -53,6 +53,17 @@
         button:active {
             border: 1px solid white;
         }
+        button:disabled {
+            color: #6e6e6e;
+            background-color: #3d3d3d;
+            padding: 5px;
+            border: 1px solid #2e2e2e;
+            border-radius: 3px;
+            margin-right: 5px;
+        }
+        button.keyExchange {
+            float: right;
+        }
         #messageList {
             list-style: none;
         }
@@ -60,15 +71,18 @@
             margin: 10px 0 0 -15px;
         }
         .red {
-            color: #ff4343
+            color: #ff4343 !important;
         }
         #userList li {
             cursor: pointer;
 
         }
-        #uuid {
+        .uuid {
             font-size: 0.65em;
             margin-bottom: 15px;
+        }
+        .green {
+            color: #22e45c !important;
         }
     </style>
 </head>
@@ -78,13 +92,15 @@
             <h1>Front End - {{username}}</h1>
             <h3>Benutzer</h3>
             <ul id="userList">
-                <li v-for="(user, uuid) in userList" v-on:click="setToUser(user, uuid)">
+                <li v-for="(user, uuid) in availableUserList" v-on:click="setToUser(user, uuid)" :class="{green: uuid === toUserUuid}">
                     {{user}}
-                    <div id="uuid">id: {{uuid}}</div>
+                    <button v-if="keyNotExchanged(uuid)" class="keyExchange" v-on:click="initialiseKeyExchange(uuid)">KEY EXCHANGE</button>
+                    <div class="uuid">id: {{uuid}}</div>
                 </li>
             </ul>
             <input type="text" v-model="input" v-on:keyup.enter="post()" placeholder="Neue Nachricht">
-            <button v-on:click="post()" id="postButton">POST</button>
+            <button v-on:click="post()" id="postButton" v-if="!keyNotExchanged(toUserUuid)">POST</button>
+            <button v-else disabled>POST</button>
             <button v-on:click="clear()" class="red">CLEAR</button>
             <div style="font-size: 0.8em; color: #b4b4b4">An: {{toUser}}</div>
             <h3>Nachrichten</h3>
@@ -101,7 +117,6 @@
     <script>
         /*
             TODO:
-            - Gesprächspartner-Auswahl: users.json auf front-end laden -> aus liste auswählen   DONE
             - Verschlüsselung: foto
         */
 
@@ -111,20 +126,31 @@
         Vue.createApp({
             setup() {
                 /* ================================= username handling ================================= */
+                // get username, uuid from localstorage, change title accordingly
                 let username = ref(localStorage.getItem("username"));
+                let clientUuid = ref(localStorage.getItem("uuid"));
+                document.title = `Front End - ${username.value}`;
+
+                // check if user is logged in
                 let loggedIn = computed(function () {
                     return username.value != null;
                 })
 
                 let usernameInput = ref("");
-                let userList = ref([]);
+                let userList = ref({});
+                let availableUserList = ref({});
 
                 async function getUsernames() {
                     var resp = await axios.get("/api/users/");
                     userList.value = resp.data;
+                    
+                    // separate list with users where the client is removed for displayed user list
+                    Object.assign(availableUserList.value, userList.value);
+                    delete availableUserList.value[clientUuid.value];
                 }
                 getUsernames();
 
+                // save the given username from the login page in localstorage and on the server
                 async function saveUsername() {
                     if (usernameInput.value != "") {
                         username.value = usernameInput.value;
@@ -136,8 +162,11 @@
                     }
                 }
 
+                // default recipient
                 let toUser = ref("Alle");
                 let toUserUuid = ref("?");
+
+                // change recipient
                 function setToUser(user, uuid) {
                     toUser.value = user;
                     toUserUuid.value = uuid;
@@ -155,29 +184,68 @@
                         - data ist die antwort des Servers
                         - das Ganze muss in einer async Funktion ablaufen
                     */
-                    var resp = await axios.get("/api/");
-                    let messageList = [];
-                    for (const listEntry of resp.data) {
-                        messageList.push(`${userList.value[listEntry["from"]]} -> ${userList.value[listEntry["to"]]}: ${listEntry["content"]}`)
-                        output.value = messageList;
+                    var resp = await axios.get("/api/"); // get all messages
+                    let messageList = []; 
+                    if (resp.data.length != 0) {
+                        for (const listEntry of resp.data) {
+                            if (listEntry["type"] == "message") {
+                                // if the message is a text message, save it to the list to be displayed
+                                messageList.push(`${userList.value[listEntry["from"]]} -> ${userList.value[listEntry["to"]]}: ${listEntry["content"]}`)
+                                output.value = messageList;
+                            } else if (listEntry["type"] == "keyExchange" && listEntry["to"] == clientUuid.value) {
+                                // if it is a key exchange, save the key in localstorage
+                                saveKey(listEntry["from"], listEntry["content"])
+                            }
+                        }
+                    } else {
+                        output.value = [];
                     }
                 }
                 get();
 
+                // post a new text message
                 async function post() {
                     if (input.value != "") {
                         var resp = await axios.post("/api/", {type:"message", content: input.value, fromUser: localStorage.getItem("uuid"), toUser: toUserUuid.value});
-                        get();
                         input.value = "";
                     }
                 }
 
-                /* ================================= utility functions ================================= */
-                async function clear() {
-                    var resp = await axios.delete("/api/");
-                    get();
+                /* ===================================== Encryption ==================================== */
+                // get keys from localstorage
+                let keyArray = JSON.parse(localStorage.getItem("keys")) || {};
+
+
+                async function initialiseKeyExchange(toUuid) {
+                    var dummyKey = Math.floor(Math.random() * 1000); // dummy key - replace with DHM-Exchange
+                    saveKey(toUuid, dummyKey)
+                    var resp = await axios.post("/api/", {type:"keyExchange", content: dummyKey, fromUser: localStorage.getItem("uuid"), toUser: toUuid})
                 }
 
+                // save a key with the correct uuid in localstorage
+                function saveKey(uuid, key) {
+                    keyArray[uuid] = key;
+                    localStorage.setItem("keys", JSON.stringify(keyArray));
+                }
+
+                // check if a key has already been exchanged by checking if it is in the key array
+                function keyNotExchanged(uuid) {
+                    if (uuid == "?") {
+                        return false; // no key exchange with "all"
+                    } else {
+                        // key in keyArray -> false (clearer code)
+                        // key in keyArray -> true
+                        return !(uuid in keyArray);
+                    }
+                }
+
+                /* ================================= utility functions ================================= */
+                // clear all text and key exchange messages
+                async function clear() {
+                    var resp = await axios.delete("/api/");
+                }
+
+                // update messages every second
                 setInterval(() => (get(), getUsernames()), 1000); // reload
                 
                 /* ====================================== return ======================================= */
@@ -188,12 +256,18 @@
                     clear,
                     loggedIn,
                     username,
+                    clientUuid,
                     usernameInput,
                     saveUsername,
                     getUsernames,
                     userList,
+                    availableUserList,
                     setToUser,
                     toUser,
+                    toUserUuid,
+                    keyArray,
+                    initialiseKeyExchange,
+                    keyNotExchanged,
                 }
             }
         }).mount("#app");

@@ -27,7 +27,7 @@ def get(request):
     return dataList
 
 @api.POST("/api/")
-def post(request, content:str, fromUser:str, toUser:str, type:str):
+def post(request, content, fromUser:str, toUser:str, type:str):
     # get current list and add new element
     with open(filename) as f:
         entryList = json.load(f)
