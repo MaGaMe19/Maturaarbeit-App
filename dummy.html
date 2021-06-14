@@ -6,96 +6,65 @@
     <title>Front End</title>
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="dummy_style.css">
+    <link rel="stylesheet" href="dummy_style.css">
     <script src="https://unpkg.com/axios"></script>
     <script src="https://unpkg.com/vue@next"></script>
-    <style>
-        body {
-            padding: 15px 5vw 0 5vw;
-            background-color: #0e0e0e;
-            color: white;
-        }
-        h1 {
-            font-size: 6vw;
-        }
-        h3 {
-            border-bottom: 1px solid white;
-            font-size: 1.3em;
-        }
-        * {
-            font-family: 'Poppins', sans-serif;
-            outline: none;
-            font-size: 0.99em;
-        }
-        input {
-            margin: 10px 5px 5px 0;
-            background-color: #3d3d3d;
-            padding: 5px;
-            color: white;
-            border: 1px solid #bebebe;
-            border-radius: 3px;
-            width: 50vw;
-        }
-        input:focus {
-            border: 1px solid white;
-        }
-        ::placeholder {
-            color: #bebebe;
-        }
-        button:enabled {
-            background-color: #3d3d3d;
-            padding: 5px;
-            color: white;
-            border: 1px solid #bebebe;
-            border-radius: 3px;
-            margin-right: 5px;
-            cursor: pointer;
-        }
-        button:active {
-            border: 1px solid white;
-        }
-        button:disabled {
-            color: #6e6e6e;
-            background-color: #3d3d3d;
-            padding: 5px;
-            border: 1px solid #2e2e2e;
-            border-radius: 3px;
-            margin-right: 5px;
-        }
-        button.keyExchange {
-            float: right;
-        }
-        #messageList {
-            list-style: none;
-        }
-        #messageList li {
-            margin: 10px 0 0 -15px;
-        }
-        .red {
-            color: #ff4343 !important;
-        }
-        #userList li {
-            cursor: pointer;
-
-        }
-        .uuid {
-            font-size: 0.65em;
-            margin-bottom: 15px;
-        }
-        .green {
-            color: #22e45c !important;
-        }
-    </style>
 </head>
 <body>
     <div id="app">
         <div v-if="loggedIn">
-            <h1>Front End - {{username}}</h1>
+            <h1>
+                Front End - {{username}}
+                <span class="openMenu" onclick="openMenu()">&#9776;</span>
+            </h1>
+            <div id="overlay">
+                <div id="info">
+                    <h1>
+                        Info
+                        <span class="closeMenu" onclick="closeMenu()">&#10006;</span>
+                    </h1>
+                    <p>
+                        Vielen Dank für das Benutzen dieser Web-App, welche im Rahmen der Maturaarbeit von Mattia Metzler am Gymnasium
+                        Neufeld entstanden ist.<br><br>
+                        Fach: Informatik <br> 
+                        Betreuende Lehrperson: Marco Schmalz (SHM) <br>
+                    </p><br>
+                    <p>
+                        <table>
+                            <caption>Bedeutung der Farben</caption>
+                            <tr>
+                                <td class="green">Grün</td>
+                                <td>An diesen Benutzer wird die Nachricht gesendet.</td>
+                            </tr>
+                            <tr>
+                                <td class="lightBlue">Hellblau</td>
+                                <td>Diese Nachricht wurde an dich gesendet.</td>
+                            </tr>
+                            <tr>
+                                <td class="darkBlue">Dunkelblau</td>
+                                <td>Diese Nachricht wurde von dir gesendet.</td>
+                            </tr>
+                            <tr>
+                                <td class="red">Rot</td>
+                                <td>Diese Nachricht ist verschlüsselt, da sie nicht an dich gesendet wurde.</td>
+                            </tr>
+                        </table>
+                    </p><br>
+                    <p id="copyright">
+                        Copyright &copy; 2021 Mattia Metzler.
+                    </p>
+                </div>
+            </div>
             <h3>Benutzer</h3>
             <ul id="userList">
                 <li v-for="(user, uuid) in availableUserList" v-on:click="setToUser(user, uuid)" :class="{green: uuid === toUserUuid}">
                     {{user}}
                     <button v-if="keyNotExchanged(uuid)" class="keyExchange" v-on:click="initialiseKeyExchange(uuid)">KEY EXCHANGE</button>
-                    <div class="uuid">id: {{uuid}}</div>
+                    <div v-else class="small" :class="{hidden: uuid == '?'}">
+                        key: {{getKey(uuid)}} &nbsp; | &nbsp; id: {{uuid}}
+                    </div>
+                    
                 </li>
             </ul>
             <input type="text" v-model="input" v-on:keyup.enter="post()" placeholder="Neue Nachricht">
@@ -105,7 +74,13 @@
             <div style="font-size: 0.8em; color: #b4b4b4">An: {{toUser}}</div>
             <h3>Nachrichten</h3>
             <ul id="messageList">
-                <li v-for="item in output">{{item}}</li>
+                <li v-for="item in output" :class="{
+                    lightBlue: item['toUuid'] == clientUuid, 
+                    darkBlue: item['fromUuid'] == clientUuid, 
+                    red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
+                    <div>{{item["fromName"]}} -> {{item["toName"]}}</div>
+                    <div class="message">{{item["content"]}}</div>
+                </li>
             </ul>
         </div>
         <div v-else>
@@ -190,7 +165,14 @@
                         for (const listEntry of resp.data) {
                             if (listEntry["type"] == "message") {
                                 // if the message is a text message, save it to the list to be displayed
-                                messageList.push(`${userList.value[listEntry["from"]]} -> ${userList.value[listEntry["to"]]}: ${listEntry["content"]}`)
+                                // messageList.push(`${userList.value[listEntry["from"]]} -> ${userList.value[listEntry["to"]]}: ${listEntry["content"]}`)
+                                messageList.push({
+                                    "fromUuid": listEntry["from"],
+                                    "fromName": userList.value[listEntry["from"]],
+                                    "toUuid": listEntry["to"],
+                                    "toName": userList.value[listEntry["to"]],
+                                    "content": listEntry["content"]
+                                })
                                 output.value = messageList;
                             } else if (listEntry["type"] == "keyExchange" && listEntry["to"] == clientUuid.value) {
                                 // if it is a key exchange, save the key in localstorage
@@ -226,6 +208,10 @@
                 function saveKey(uuid, key) {
                     keyArray[uuid] = key;
                     localStorage.setItem("keys", JSON.stringify(keyArray));
+                }
+
+                function getKey(uuid) {
+                    return keyArray[uuid];
                 }
 
                 // check if a key has already been exchanged by checking if it is in the key array
@@ -266,11 +252,21 @@
                     toUser,
                     toUserUuid,
                     keyArray,
+                    getKey,
                     initialiseKeyExchange,
                     keyNotExchanged,
                 }
             }
         }).mount("#app");
+
+        var overlay = document.querySelector("#overlay");
+
+        function openMenu() {
+            overlay.style.top = 0;
+        }
+        function closeMenu() {
+            overlay.style.top = -1000;
+        }
     </script>
 </body>
 </html>
