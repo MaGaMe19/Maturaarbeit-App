@@ -2,6 +2,7 @@ body {
     padding: 15px 5vw 0 5vw;
     background-color: #0e0e0e;
     color: white;
+    overflow-x: hidden;
 }
 h1 {
     font-size: 2.5em;
@@ -14,6 +15,17 @@ h3 {
     font-family: 'Poppins', sans-serif;
     outline: none;
     font-size: 0.99em;
+}
+::-webkit-scrollbar {
+    width: 10px;
+    background-color: #3a3a3a;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #686868;
+    border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #8b8b8b;
 }
 
 /* ======================================= input ======================================== */
@@ -62,14 +74,17 @@ button:disabled {
     list-style: none;
 }
 #messageList li {
-    margin: 10px 0 0 -15px;
+    margin: 25px 0 0 -15px;
+}
+#userList li {
+    margin-top: 15px;
 }
 .keyExchange {
     float: right;
 }
 .small {
-    font-size: 0.65em;
-    margin-bottom: 15px;
+    font-size: 10px;
+    margin-bottom: 3px;
 }
 .message {
     margin-left: 20px;
@@ -118,6 +133,9 @@ button:disabled {
     top: -1000;
     background: rgba(0, 0, 0, 0.9);
     transition: .3s;
+}
+#overlay p {
+    margin-top: 30px;
 }
 #info {
     z-index: 2;
