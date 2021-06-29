@@ -1,6 +1,5 @@
 __pycache__
-data.json
-users.json
+*.json
 api_utils.py
 ablauf.jpg
 index.html
