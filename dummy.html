@@ -17,6 +17,7 @@
             <h1>
                 Front End - {{username}}
                 <span class="openMenu" onclick="openMenu()">&#9776;</span>
+                <div class="small" style="font-weight: normal !important;">id: {{clientUuid}}</div>
             </h1>
             <div id="overlay">
                 <div id="info">
@@ -29,7 +30,7 @@
                         Neufeld entstanden ist.<br><br>
                         Fach: Informatik <br> 
                         Betreuende Lehrperson: Marco Schmalz (SHM) <br>
-                    </p><br>
+                    </p>
                     <p>
                         <table>
                             <caption>Bedeutung der Farben</caption>
@@ -50,7 +51,11 @@
                                 <td>Diese Nachricht ist verschlüsselt, da sie nicht an dich gesendet wurde.</td>
                             </tr>
                         </table>
-                    </p><br>
+                    </p>
+                    <p>
+                        <button class="red" onclick="
+                        localStorage.removeItem('keys'); location.reload();">Alle Schlüssel löschen</button>
+                    </p>
                     <p id="copyright">
                         Copyright &copy; 2021 Mattia Metzler.
                     </p>
@@ -58,27 +63,32 @@
             </div>
             <h3>Benutzer</h3>
             <ul id="userList">
-                <li v-for="(user, uuid) in availableUserList" v-on:click="setToUser(user, uuid)" :class="{green: uuid === toUserUuid}">
-                    {{user}}
-                    <button v-if="keyNotExchanged(uuid)" class="keyExchange" v-on:click="initialiseKeyExchange(uuid)">KEY EXCHANGE</button>
-                    <div v-else class="small" :class="{hidden: uuid == '?'}">
-                        key: {{getKey(uuid)}} &nbsp; | &nbsp; id: {{uuid}}
+                <li v-for="(user, uuid) in availableUserList" v-on:click="setToUser(user, uuid)">
+                    <div>
+                        <span :class="{green: uuid === toUserUuid}">{{user}}</span>
+                        <span v-if="uuid != '?'">
+                            <button class="keyExchange" v-if="getState(uuid) == 'not-initialised'" v-on:click="initialiseKeyExchange(uuid)">Key Exchange</button>
+                            <div class="keyExchange" v-if="getState(uuid) == 'pending-sent'">Key Exchange Pending</div>
+                            <button class="keyExchange" v-if="getState(uuid) == 'pending-received'" v-on:click="confirmKeyExchange(uuid)">Confirm Key Exchange</button>
+                            <div class="small">id: {{uuid}}</div>
+                            <div class="small" v-if="getState(uuid) == 'completed'">key: {{keyArray[uuid]["content"]}}</div>
+                        </span>
                     </div>
-                    
                 </li>
             </ul>
             <input type="text" v-model="input" v-on:keyup.enter="post()" placeholder="Neue Nachricht">
-            <button v-on:click="post()" id="postButton" v-if="!keyNotExchanged(toUserUuid)">POST</button>
+            <button v-on:click="post()" id="postButton" v-if="getState(toUserUuid) == 'completed' || toUserUuid == '?'">POST</button>
             <button v-else disabled>POST</button>
             <button v-on:click="clear()" class="red">CLEAR</button>
             <div style="font-size: 0.8em; color: #b4b4b4">An: {{toUser}}</div>
             <h3>Nachrichten</h3>
             <ul id="messageList">
-                <li v-for="item in output" :class="{
-                    lightBlue: item['toUuid'] == clientUuid, 
-                    darkBlue: item['fromUuid'] == clientUuid, 
-                    red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
-                    <div>{{item["fromName"]}} -> {{item["toName"]}}</div>
+                <li v-for="item in output">
+                    <div :class="{
+                        lightBlue: item['toUuid'] == clientUuid, 
+                        darkBlue: item['fromUuid'] == clientUuid,
+                        red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
+                        {{item["fromName"]}} -> {{item["toName"]}}</div>
                     <div class="message">{{item["content"]}}</div>
                 </li>
             </ul>
@@ -92,6 +102,11 @@
     <script>
         /*
             TODO:
+            - Test-Handshake    DONE
+                - Zufallszahl generieren und übermitteln
+                - Empfänger generiert auch Zufallszahl durch "Schlüsselaustausch Bestätigen"
+                - Zahlen multiplizieren -> "geheimer gemeinsamer Schlüssel"
+
             - Verschlüsselung: foto
         */
 
@@ -129,7 +144,11 @@
                 async function saveUsername() {
                     if (usernameInput.value != "") {
                         username.value = usernameInput.value;
-                        var resp = await axios.post("/api/users/", {name: username.value});
+                        try {
+                            await axios.post("/api/users/", {name: username.value});
+                        } catch (error) {
+                            alert(`Server Error while trying to save username (${error})`)
+                        }
 
                         localStorage.setItem("username", username.value);
                         localStorage.setItem("uuid", resp.data);
@@ -165,7 +184,6 @@
                         for (const listEntry of resp.data) {
                             if (listEntry["type"] == "message") {
                                 // if the message is a text message, save it to the list to be displayed
-                                // messageList.push(`${userList.value[listEntry["from"]]} -> ${userList.value[listEntry["to"]]}: ${listEntry["content"]}`)
                                 messageList.push({
                                     "fromUuid": listEntry["from"],
                                     "fromName": userList.value[listEntry["from"]],
@@ -176,7 +194,15 @@
                                 output.value = messageList;
                             } else if (listEntry["type"] == "keyExchange" && listEntry["to"] == clientUuid.value) {
                                 // if it is a key exchange, save the key in localstorage
-                                saveKey(listEntry["from"], listEntry["content"])
+                                if (!(getState(listEntry["from"]) == "completed")) {
+                                    saveKey(listEntry["from"], listEntry["content"], "pending-received")
+                                }
+                            } else if (listEntry["type"] == "keyExchangeConfirmation" && listEntry["to"] == clientUuid.value) {
+                                if (!(getState(listEntry["from"]) == "completed")) {
+                                    console.log(listEntry["content"]);
+                                    console.log(keyArray.value[listEntry["from"]["content"]]);
+                                    saveKey(listEntry["from"], listEntry["content"] * keyArray.value[listEntry["from"]]["content"], "completed");
+                                }
                             }
                         }
                     } else {
@@ -187,48 +213,82 @@
 
                 // post a new text message
                 async function post() {
-                    if (input.value != "") {
-                        var resp = await axios.post("/api/", {type:"message", content: input.value, fromUser: localStorage.getItem("uuid"), toUser: toUserUuid.value});
+                    if (input.value != "" && getState(toUserUuid.value) == "completed") {
+                        try {
+                            await axios.post("/api/", {
+                                type:"message", 
+                                content: `${input.value} (Encrypted with: ${keyArray.value[toUserUuid.value]['content']})`, 
+                                fromUser: clientUuid.value, 
+                                toUser: toUserUuid.value});
+                        } catch (error) {
+                            alert(`Server Error while trying to send message (${error})`)
+                        }
                         input.value = "";
                     }
                 }
 
                 /* ===================================== Encryption ==================================== */
                 // get keys from localstorage
-                let keyArray = JSON.parse(localStorage.getItem("keys")) || {};
-
+                let keyArray = ref(JSON.parse(localStorage.getItem("keys")) || {});
 
                 async function initialiseKeyExchange(toUuid) {
                     var dummyKey = Math.floor(Math.random() * 1000); // dummy key - replace with DHM-Exchange
-                    saveKey(toUuid, dummyKey)
-                    var resp = await axios.post("/api/", {type:"keyExchange", content: dummyKey, fromUser: localStorage.getItem("uuid"), toUser: toUuid})
+                    saveKey(toUuid, dummyKey, "pending-sent") // save dummy key as pending sent
+                    try {
+                        // post key to communication partner
+                        await axios.post("/api/", {
+                            type:"keyExchange", 
+                            content: dummyKey, 
+                            fromUser: clientUuid.value, 
+                            toUser: toUuid})
+                    } catch (error) {
+                        alert(`Server Error while trying to initialise key exchange (${error})`)
+                    }
+                }
+
+                async function confirmKeyExchange(uuid) {
+                    var dummyKey = Math.floor(Math.random() * 1000); // generate own random dummy key
+                    try {
+                        // post dummy key to communication partner
+                        await axios.post("/api/", {
+                            type: "keyExchangeConfirmation",
+                            content: dummyKey,
+                            fromUser: clientUuid.value,
+                            toUser: uuid});
+                    } catch (error) {
+                        alert(`Server Error while trying to confirm key exchange (${error})`)
+                    }
+                    // calculate and save final key by multiplying
+                    var finalKey = dummyKey * keyArray.value[uuid]["content"];
+                    saveKey(uuid, finalKey, "completed")
                 }
 
                 // save a key with the correct uuid in localstorage
-                function saveKey(uuid, key) {
-                    keyArray[uuid] = key;
-                    localStorage.setItem("keys", JSON.stringify(keyArray));
+                function saveKey(uuid, key, state) {
+                    keyArray.value[uuid] = {
+                        "content": key,
+                        "state": state
+                    }
+                    localStorage.setItem("keys", JSON.stringify(keyArray.value));
                 }
 
-                function getKey(uuid) {
-                    return keyArray[uuid];
-                }
-
-                // check if a key has already been exchanged by checking if it is in the key array
-                function keyNotExchanged(uuid) {
-                    if (uuid == "?") {
-                        return false; // no key exchange with "all"
+                // get state of key by uuid
+                function getState(uuid) {
+                    if (!(uuid in keyArray.value)) {
+                        return "not-initialised"
                     } else {
-                        // key in keyArray -> false (clearer code)
-                        // key in keyArray -> true
-                        return !(uuid in keyArray);
+                        return keyArray.value[uuid]["state"]
                     }
                 }
 
                 /* ================================= utility functions ================================= */
                 // clear all text and key exchange messages
                 async function clear() {
-                    var resp = await axios.delete("/api/");
+                    try {
+                        await axios.delete("/api/");  
+                    } catch (error) {
+                        alert(`Server Error while trying to clear messages (${error})`);
+                    }
                 }
 
                 // update messages every second
@@ -252,9 +312,9 @@
                     toUser,
                     toUserUuid,
                     keyArray,
-                    getKey,
                     initialiseKeyExchange,
-                    keyNotExchanged,
+                    confirmKeyExchange,
+                    getState,
                 }
             }
         }).mount("#app");
