@@ -31,7 +31,7 @@ h3 {
 /* ======================================= input ======================================== */
 input {
     margin: 10px 5px 5px 0;
-    background-color: #3d3d3d;
+    background-color: #313131;
     padding: 5px;
     color: white;
     border: 1px solid #bebebe;
@@ -45,7 +45,7 @@ input:focus {
     color: #bebebe;
 }
 button:enabled {
-    background-color: #3d3d3d;
+    background-color: #313131;
     padding: 5px;
     color: white;
     border: 1px solid #bebebe;
@@ -58,7 +58,7 @@ button:active {
 }
 button:disabled {
     color: #6e6e6e;
-    background-color: #3d3d3d;
+    background-color: #313131;
     padding: 5px;
     border: 1px solid #2e2e2e;
     border-radius: 3px;
@@ -92,7 +92,7 @@ button:disabled {
 
 /* ======================================= colors ======================================= */
 .red {
-    color: #ff4343 !important;
+    color: #ff1313 !important;
 }
 .green {
     color: #22e45c !important;
