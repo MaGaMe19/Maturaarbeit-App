@@ -17,7 +17,9 @@ if not os.path.exists(filename):
 # prepare users.json if it doesn't exist
 if not os.path.exists(filenameUsers):
     with open(filenameUsers, "w") as f:
-        json.dump({}, f)
+        json.dump({
+            "?": "Alle"
+        }, f)
 
 @api.GET("/api/")
 def get(request):
