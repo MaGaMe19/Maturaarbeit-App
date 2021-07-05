@@ -1,6 +1,6 @@
 body {
     padding: 15px 5vw 0 5vw;
-    background-color: #0e0e0e;
+    background-color: #232a36;
     color: white;
     overflow-x: hidden;
 }
@@ -31,7 +31,7 @@ h3 {
 /* ======================================= input ======================================== */
 input {
     margin: 10px 5px 5px 0;
-    background-color: #313131;
+    background-color: #343e4e;
     padding: 5px;
     color: white;
     border: 1px solid #bebebe;
@@ -45,7 +45,7 @@ input:focus {
     color: #bebebe;
 }
 button:enabled {
-    background-color: #313131;
+    background-color: #343e4e;
     padding: 5px;
     color: white;
     border: 1px solid #bebebe;
@@ -58,7 +58,7 @@ button:active {
 }
 button:disabled {
     color: #6e6e6e;
-    background-color: #313131;
+    background-color: #343e4e;
     padding: 5px;
     border: 1px solid #2e2e2e;
     border-radius: 3px;
@@ -83,8 +83,14 @@ button:disabled {
     float: right;
 }
 .small {
-    font-size: 10px;
+    font-size: 11px;
     margin-bottom: 3px;
+}
+.cropped {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 255px;
+    overflow: hidden;
 }
 .message {
     margin-left: 20px;
@@ -92,7 +98,7 @@ button:disabled {
 
 /* ======================================= colors ======================================= */
 .red {
-    color: #ff1313 !important;
+    color: #dd1e1e !important;
 }
 .green {
     color: #22e45c !important;
@@ -103,8 +109,14 @@ button:disabled {
 .darkBlue {
     color: #6085ff !important;
 }
+div.lightBlue::after, div.darkBlue::after {
+    content: " 🔒";
+}
 .hidden {
     display: none;
+}
+.everybody::after {
+    content: " 🔓";
 }
 
 /* ======================================== menu ======================================== */
@@ -140,7 +152,7 @@ button:disabled {
 #info {
     z-index: 2;
     width: 80vw;
-    background-color: #252525;
+    background-color: #1c232c;
     border-radius: 8px;
     padding: 0 20px 0 20px;
 }

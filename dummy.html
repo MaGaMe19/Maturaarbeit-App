@@ -34,7 +34,7 @@
                     </p>
                     <p>
                         <table>
-                            <caption>Bedeutung der Farben</caption>
+                            <caption>Bedeutung der Farben und Symbole</caption>
                             <tr>
                                 <td class="green">Grün</td>
                                 <td>An diesen Benutzer wird die Nachricht gesendet.</td>
@@ -49,7 +49,15 @@
                             </tr>
                             <tr>
                                 <td class="red">Rot</td>
-                                <td>Diese Nachricht ist verschlüsselt, da sie nicht an dich gesendet wurde.</td>
+                                <td>Diese Nachricht ist nicht lesbar (verschlüsselt), da sie nicht an dich gesendet wurde.</td>
+                            </tr>
+                            <tr>
+                                <td>🔓</td>
+                                <td>Diese Nachricht wurde unverschlüsselt an Alle geschickt.</td>
+                            </tr>
+                            <tr>
+                                <td>🔒</td>
+                                <td>Diese Nachricht wurde sicher verschlüsselt und entschlüsselt.</td>
                             </tr>
                         </table>
                     </p>
@@ -72,7 +80,7 @@
                             <div class="keyExchange" v-if="getState(uuid) == 'pending-sent'">Key Exchange Pending</div>
                             <button class="keyExchange" v-if="getState(uuid) == 'pending-received'" v-on:click="confirmKeyExchange(uuid)">Confirm Key Exchange</button>
                             <div class="small">id: {{uuid}}</div>
-                            <div class="small" v-if="getState(uuid) == 'completed'">key: {{keyArray[uuid]["content"]}}</div>
+                            <div class="small cropped" v-if="getState(uuid) == 'completed'">key: {{keyArray[uuid]["content"]}}</div>
                         </span>
                     </div>
                 </li>
@@ -86,8 +94,9 @@
             <ul id="messageList">
                 <li v-for="item in output">
                     <div :class="{
+                        everybody: item['toUuid'] == '?',
                         lightBlue: item['toUuid'] == clientUuid, 
-                        darkBlue: item['fromUuid'] == clientUuid,
+                        darkBlue: item['fromUuid'] == clientUuid && item['toUuid'] != '?',
                         red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
                         {{item["fromName"]}} -> {{item["toName"]}}</div>
                     <div class="message">{{item["content"]}}</div>
@@ -109,10 +118,9 @@
                 - Zahlen multiplizieren -> "geheimer gemeinsamer Schlüssel"
 
             - Verschlüsselung
-                - Schlüsselaustausch    DONE
-                - Encoding
-                    - Nachrichten von Uint8Array -> Hex -> Uint8Array
-                - Encryption
+                - Schlüsselaustausch        DONE
+                - Encoding & Encryption     DONE
+                - Nonce generieren und übermittlen
         */
 
         var ref = Vue.ref;
@@ -124,7 +132,9 @@
                 // get username, uuid from localstorage, change title accordingly
                 let username = ref(localStorage.getItem("username"));
                 let clientUuid = ref(localStorage.getItem("uuid"));
-                document.title = `Front End - ${username.value}`;
+                if (username.value != null) {
+                    document.title = `Front End - ${username.value}`;
+                }
 
                 // check if user is logged in
                 let loggedIn = computed(function () {
@@ -150,7 +160,7 @@
                     if (usernameInput.value != "") {
                         username.value = usernameInput.value;
                         try {
-                            await axios.post("/api/users/", {name: username.value});
+                            var resp = await axios.post("/api/users/", {name: username.value});
                         } catch (error) {
                             alert(`Server Error while trying to save username (${error})`)
                         }
@@ -187,14 +197,30 @@
                     let messageList = []; 
                     if (resp.data.length != 0) {
                         for (const listEntry of resp.data) {
+                            // if the message is a text message, save it to the list to be displayed
                             if (listEntry["type"] == "message") {
-                                // if the message is a text message, save it to the list to be displayed
+                                let content = listEntry["content"]
+                                let messageArray = new Uint8Array(Object.values(listEntry["content"]));
+
+                                // if the message is addressed to the current user, decrypt it
+                                if (listEntry["to"] == clientUuid.value) {
+                                    content = decrypt(listEntry["from"], messageArray);
+                                } 
+                                // if the message comes from the current user, decrypt it as well
+                                else if (listEntry["from"] == clientUuid.value && listEntry["to"] != "?") {
+                                    content = decrypt(listEntry["to"], messageArray);
+                                }
+                                // if the message is neither by nor for the current user (but not for everybody), decode it
+                                else if (listEntry["to"] != "?") {
+                                    content = `Verschlüsselte Nachricht: ${dec.decode(messageArray)}`;
+                                }
+
                                 messageList.push({
                                     "fromUuid": listEntry["from"],
                                     "fromName": userList.value[listEntry["from"]],
                                     "toUuid": listEntry["to"],
                                     "toName": userList.value[listEntry["to"]],
-                                    "content": listEntry["content"]
+                                    "content": content
                                 })
                                 output.value = messageList;
                             } else if (listEntry["type"] == "keyExchange" && listEntry["to"] == clientUuid.value) {
@@ -218,6 +244,7 @@
                 // post a new text message
                 async function post() {
                     if (input.value != "") {
+                        // check if key exchange has been completed
                         if (toUserUuid.value != "?" && getState(toUserUuid.value) == "completed") {
                             content = encrypt(toUserUuid.value, input.value);
                         } else {
@@ -241,7 +268,7 @@
                 let enc = new TextEncoder("utf-8"); // utf-8 to Uint8Array
                 let dec = new TextDecoder("utf-8");
 
-                var nonceArray = crypto.getRandomValues(new Uint8Array(12)); // random Nonce (= number used once)
+                var nonceArray = new Uint8Array(12); // random Nonce (= number used once)
 
                 // algorithm to calculate big power
                 function squareMultiply(x, k, mod) {
@@ -260,12 +287,12 @@
 
                 var g = 5n; // generator
                 // prime, 256-Bit https://asecuritysite.com/encryption/random3?val=256
-                var n = 40607624323698004944288610351048360638553718145867992171012767459255954639447;
+                var n = 40607624323698004944288610351048360638553718145867992171012767459255954639447n;
                 
                 function encrypt(uuid, message) {
-                    var s = BigInt(keyArray.value[uuid]["content"]);
+                    let s = BigInt(keyArray.value[uuid]["content"]);
 
-                    var keyUint8Array = new Uint8Array(32);
+                    let keyUint8Array = new Uint8Array(32);
                     for (let i = 0; i < keyUint8Array.length; i++) {
                         keyUint8Array[i] = Number(s % 256n);
                         s = s >> 8n;
@@ -273,18 +300,31 @@
 
                     const encryptor = new JSChaCha20(keyUint8Array, nonceArray); // chacha20 instance
 
-                    // TODO: Encode message in hex
-                    return encryptor.encrypt(enc.encode(message));
+                    let rawEncryptedMessage = encryptor.encrypt(enc.encode(message));
+                    return rawEncryptedMessage;
+                }
+                
+                function decrypt(uuid, messageUint8) {
+                    let s = BigInt(keyArray.value[uuid]["content"]);
+
+                    let keyUint8Array = new Uint8Array(32);
+                    for (let i = 0; i < keyUint8Array.length; i++) {
+                        keyUint8Array[i] = Number(s % 256n);
+                        s = s >> 8n;
+                    }
+
+                    const decryptor = new JSChaCha20(keyUint8Array, nonceArray);
+                    return dec.decode(decryptor.decrypt(messageUint8));
                 }
 
                 // get keys from localstorage
                 let keyArray = ref(JSON.parse(localStorage.getItem("keys")) || {});
 
                 async function initialiseKeyExchange(toUuid) {
-                    var privateKey = BigInt(Math.floor(Math.random() * n)) // privateKey (random num between 0 and n)
+                    var privateKey = BigInt(Math.floor(Math.random() * Number(n))) // privateKey (random num between 0 and n)
                     saveKey(toUuid, privateKey, "pending-sent") // save dummy key as pending sent
                     
-                    var publicKey = squareMultiply(g, privateKey, BigInt(n));
+                    var publicKey = squareMultiply(g, privateKey, n);
                     try {
                         // post key to communication partner
                         await axios.post("/api/", {
@@ -298,8 +338,8 @@
                 }
 
                 async function confirmKeyExchange(uuid) {
-                    var privateKey = BigInt(Math.floor(Math.random() * n)); // privateKey (random num between 0 and n)
-                    var publicKey = squareMultiply(g, privateKey, BigInt(n));
+                    var privateKey = BigInt(Math.floor(Math.random() * Number(n))); // privateKey (random num between 0 and n)
+                    var publicKey = squareMultiply(g, privateKey, n);
 
                     try {
                         // post dummy key to communication partner
@@ -313,12 +353,12 @@
                     }
 
                     // calculate and save shared secret key (public key of recipient is in localstorage)
-                    var sharedSecretKey = squareMultiply(BigInt(keyArray.value[uuid]["content"]), privateKey, BigInt(n));
+                    var sharedSecretKey = squareMultiply(BigInt(keyArray.value[uuid]["content"]), privateKey, n);
                     saveKey(uuid, sharedSecretKey, "completed");
                 }
 
                 function completeKeyExchange(uuid, publicKey) {
-                    var sharedSecretKey = squareMultiply(BigInt(publicKey), BigInt(keyArray.value[uuid]["content"]), BigInt(n));
+                    var sharedSecretKey = squareMultiply(BigInt(publicKey), BigInt(keyArray.value[uuid]["content"]), n);
                     saveKey(uuid, sharedSecretKey, "completed");
                 }
 
