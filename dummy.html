@@ -110,14 +110,7 @@
         </div>
     </div>
     <script>
-        /*
-            TODO:
-            - Test-Handshake    DONE
-                - Zufallszahl generieren und übermitteln
-                - Empfänger generiert auch Zufallszahl durch "Schlüsselaustausch Bestätigen"
-                - Zahlen multiplizieren -> "geheimer gemeinsamer Schlüssel"
-
-            - Verschlüsselung
+        /*  - Verschlüsselung
                 - Schlüsselaustausch        DONE
                 - Encoding & Encryption     DONE
                 - Nonce generieren und übermittlen
@@ -243,9 +236,9 @@
 
                 // post a new text message
                 async function post() {
-                    if (input.value != "") {
+                    if (input.value != "" && getState(toUserUuid.value) == "completed") {
                         // check if key exchange has been completed
-                        if (toUserUuid.value != "?" && getState(toUserUuid.value) == "completed") {
+                        if (toUserUuid.value != "?") {
                             content = encrypt(toUserUuid.value, input.value);
                         } else {
                             content = input.value;
@@ -375,6 +368,8 @@
                 function getState(uuid) {
                     if (!(uuid in keyArray.value)) {
                         return "not-initialised"
+                    } else if (uuid == "?") {
+                        return "completed"
                     } else {
                         return keyArray.value[uuid]["state"]
                     }
