@@ -1,24 +1,33 @@
+:root {
+    --color-light: #fffaf6;
+    --color-input: #f1ece7;
+    --color-input-active: #ebe6e2;
+    --color-dark: #232a36;
+    --color-disabled: #a7a7a7;
+}
+
 body {
     padding: 15px 5vw 0 5vw;
-    background-color: #232a36;
-    color: white;
+    color: var(--color-dark);
+    background-color: var(--color-light);
     overflow-x: hidden;
 }
 h1 {
     font-size: 2.5em;
 }
 h3 {
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid var(--color-dark);
     font-size: 1.3em;
+    margin-bottom: 8px;
 }
 * {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Quicksand', sans-serif; /* available fonts: Poppins, Nunito, Quicksand, Ubuntu */
+    font-weight: 600;
     outline: none;
-    font-size: 0.99em;
 }
 ::-webkit-scrollbar {
     width: 10px;
-    background-color: #3a3a3a;
+    background-color: #2c2c2c;
 }
 ::-webkit-scrollbar-thumb {
     background-color: #686868;
@@ -31,60 +40,67 @@ h3 {
 /* ======================================= input ======================================== */
 input {
     margin: 10px 5px 5px 0;
-    background-color: #343e4e;
-    padding: 5px;
-    color: white;
-    border: 1px solid #bebebe;
+    font-size: 0.9em;
+    background-color: var(--color-input);
+    padding: 7px;
+    color: var(--color-dark);
+    border: 1px solid var(--color-dark);
     border-radius: 3px;
     width: 50vw;
 }
-input:focus {
-    border: 1px solid white;
+input:focus, button:active {
+    background-color: var(--color-input-active);
 }
 ::placeholder {
-    color: #bebebe;
+    color: #717e92;
+}
+button {
+    min-width: 35px;
+    font-size: 0.9em;
+    background-color: var(--color-input);
+    padding: 7px;
+    border-radius: 5px;
+    margin-right: 5px;
 }
 button:enabled {
-    background-color: #343e4e;
-    padding: 5px;
-    color: white;
-    border: 1px solid #bebebe;
-    border-radius: 3px;
-    margin-right: 5px;
+    color: var(--color-dark);
+    border: 1px solid var(--color-dark);
     cursor: pointer;
-}
-button:active {
-    border: 1px solid white;
 }
 button:disabled {
-    color: #6e6e6e;
-    background-color: #343e4e;
-    padding: 5px;
-    border: 1px solid #2e2e2e;
-    border-radius: 3px;
-    margin-right: 5px;
-}
-#userList li {
-    cursor: pointer;
-    margin-bottom: 10px;
+    color: var(--color-disabled);
+    border: 1px solid var(--color-disabled);
 }
 
 /* ====================================== messages ====================================== */
 #messageList {
     list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    margin-left: -15px;
 }
 #messageList li {
-    margin: 25px 0 0 -15px;
+    padding-top: 15px;
+    max-width: 40vw;
+    word-break: break-all;
+}
+#userlist {
+    list-style: none;
+    margin-left: -15px;
 }
 #userList li {
+    cursor: pointer;
     margin-top: 15px;
 }
 .keyExchange {
     float: right;
 }
 .small {
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 3px;
+}
+.smaller {
+    font-size: 15px;
 }
 .cropped {
     text-overflow: ellipsis;
@@ -98,40 +114,40 @@ button:disabled {
 
 /* ======================================= colors ======================================= */
 .red {
-    color: #dd1e1e !important;
+    color: #ff1010 !important;
+}
+.darkred {
+    color: #9c2323;
 }
 .green {
-    color: #22e45c !important;
+    color: #009c3c !important;
 }
 .lightBlue {
-    color: #80d4ff !important;
+    color: #1cb3ff !important;
 }
 .darkBlue {
-    color: #6085ff !important;
+    color: #3866ff !important;
 }
 div.lightBlue::after, div.darkBlue::after {
-    content: " 🔒";
+    content: " 🔐";
 }
 .hidden {
     display: none;
-}
-.everybody::after {
-    content: " 🔓";
 }
 
 /* ======================================== menu ======================================== */
 .openMenu {
     float: right;
     cursor: pointer;
-    transition: .3s;
+    transition: .2s;
 }
 .closeMenu {
     float: right;
     cursor: pointer;
-    transition: .3s;
+    transition: .2s;
 }
 .openMenu:hover, .closeMenu:hover {
-    color: #80d4ff;
+    color: #4680ff;
 }
 #overlay {
     display: flex;
@@ -143,8 +159,8 @@ div.lightBlue::after, div.darkBlue::after {
     position: absolute;
     left: 0;
     top: -1000;
-    background: rgba(0, 0, 0, 0.9);
-    transition: .3s;
+    background: rgba(85, 85, 85, 0.9);
+    transition: .2s;
 }
 #overlay p {
     margin-top: 30px;
@@ -152,7 +168,7 @@ div.lightBlue::after, div.darkBlue::after {
 #info {
     z-index: 2;
     width: 80vw;
-    background-color: #1c232c;
+    background-color: var(--color-light);
     border-radius: 8px;
     padding: 0 20px 0 20px;
 }

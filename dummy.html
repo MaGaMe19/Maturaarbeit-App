@@ -4,8 +4,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Front End</title>
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito&family=Poppins&family=Quicksand&family=Ubuntu&display=swap" rel="stylesheet">
     <link rel="preconnect" href="dummy_style.css">
     <link rel="stylesheet" href="dummy_style.css">
     <script src="jschacha20.js"></script>
@@ -18,7 +19,6 @@
             <h1>
                 Front End - {{username}}
                 <span class="openMenu" onclick="openMenu()">&#9776;</span>
-                <div class="small" style="font-weight: normal !important;">id: {{clientUuid}}</div>
             </h1>
             <div id="overlay">
                 <div id="info">
@@ -52,15 +52,12 @@
                                 <td>Diese Nachricht ist nicht lesbar (verschlüsselt), da sie nicht an dich gesendet wurde.</td>
                             </tr>
                             <tr>
-                                <td>🔓</td>
-                                <td>Diese Nachricht wurde unverschlüsselt an Alle geschickt.</td>
-                            </tr>
-                            <tr>
-                                <td>🔒</td>
-                                <td>Diese Nachricht wurde sicher verschlüsselt und entschlüsselt.</td>
+                                <td>🔐</td>
+                                <td>Diese Nachricht wurde sicher verschlüsselt. Hat eine Nachricht dieses Zeichen nicht, so wurde sie unverschlüsselt an Alle gesendet.</td>
                             </tr>
                         </table>
                     </p>
+                    <div class="small">client id: {{clientUuid}}</div>
                     <p>
                         <button class="red" onclick="
                         localStorage.removeItem('keys'); location.reload();">Alle Schlüssel löschen</button>
@@ -71,34 +68,43 @@
                 </div>
             </div>
             <h3>Benutzer</h3>
+            <div class="smaller">
+                Hier befinden sich alle verfügbaren Benutzer.<br>
+                Durch anklicken kann der Benutzer, an den die Nachricht gesendet werden soll, gewählt werden.
+            </div>
             <ul id="userList">
                 <li v-for="(user, uuid) in availableUserList" v-on:click="setToUser(user, uuid)">
                     <div>
                         <span :class="{green: uuid === toUserUuid}">{{user}}</span>
                         <span v-if="uuid != '?'">
-                            <button class="keyExchange" v-if="getState(uuid) == 'not-initialised'" v-on:click="initialiseKeyExchange(uuid)">Key Exchange</button>
-                            <div class="keyExchange" v-if="getState(uuid) == 'pending-sent'">Key Exchange Pending</div>
-                            <button class="keyExchange" v-if="getState(uuid) == 'pending-received'" v-on:click="confirmKeyExchange(uuid)">Confirm Key Exchange</button>
+                            <button class="keyExchange" title="Schlüsselaustausch initialisieren" v-if="getState(uuid) == 'not-initialised'" v-on:click="initialiseKeyExchange(uuid)">🔑</button>
+                            <button class="keyExchange" title="Antwort wird abgewartet" v-if="getState(uuid) == 'pending-sent'">⏳</button>
+                            <button class="keyExchange" title="Schlüsselaustausch bestätigen" v-if="getState(uuid) == 'pending-received'" v-on:click="confirmKeyExchange(uuid)">☑️</button>
                             <div class="small">id: {{uuid}}</div>
                             <div class="small cropped" v-if="getState(uuid) == 'completed'">key: {{keyArray[uuid]["content"]}}</div>
                         </span>
                     </div>
                 </li>
             </ul>
-            <input type="text" v-model="input" v-on:keyup.enter="post()" placeholder="Neue Nachricht">
-            <button v-on:click="post()" id="postButton" v-if="getState(toUserUuid) == 'completed' || toUserUuid == '?'">POST</button>
-            <button v-else disabled>POST</button>
+            <input type="text" v-model="input" v-on:keyup.enter="post()" :placeholder="'Neue Nachricht an ' + [[toUser]]">
+            <button v-on:click="post()" id="postButton" v-if="getState(toUserUuid) == 'completed' || toUserUuid == '?'">Senden</button>
+            <button v-else disabled>Senden</button>
             <button v-on:click="clear()" class="red">CLEAR</button>
-            <div style="font-size: 0.8em; color: #b4b4b4">An: {{toUser}}</div>
             <h3>Nachrichten</h3>
+            <div class="smaller">
+                Hier sind alle Nachrichten zu finden, welche von allen Benutzern versendet wurden.
+            </div>
+            <div class="small">
+                Die beiden Spalten dienen nur der Platzeffizienz, sie haben keine unterschiedlichen Bedeutungen.
+            </div>
             <ul id="messageList">
                 <li v-for="item in output">
                     <div :class="{
-                        everybody: item['toUuid'] == '?',
                         lightBlue: item['toUuid'] == clientUuid, 
                         darkBlue: item['fromUuid'] == clientUuid && item['toUuid'] != '?',
                         red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
-                        {{item["fromName"]}} -> {{item["toName"]}}</div>
+                        {{item["fromName"]}} 🠖 {{item["toName"]}}</div>
+                    <div class="message darkred" v-if="item['toUuid'] != clientUuid && item['fromUuid'] != clientUuid && item['toUuid'] != '?'">Verschlüsselte Nachricht:</div>
                     <div class="message">{{item["content"]}}</div>
                 </li>
             </ul>
@@ -121,6 +127,7 @@
 
         Vue.createApp({
             setup() {
+                localStorage.removeItem("theme");
                 /* ================================= username handling ================================= */
                 // get username, uuid from localstorage, change title accordingly
                 let username = ref(localStorage.getItem("username"));
@@ -205,7 +212,7 @@
                                 }
                                 // if the message is neither by nor for the current user (but not for everybody), decode it
                                 else if (listEntry["to"] != "?") {
-                                    content = `Verschlüsselte Nachricht: ${dec.decode(messageArray)}`;
+                                    content = decAscii.decode(messageArray);
                                 }
 
                                 messageList.push({
@@ -236,6 +243,8 @@
 
                 // post a new text message
                 async function post() {
+                    console.log(getState(toUserUuid.value))
+                    console.log(toUserUuid.value);;
                     if (input.value != "" && getState(toUserUuid.value) == "completed") {
                         // check if key exchange has been completed
                         if (toUserUuid.value != "?") {
@@ -260,6 +269,8 @@
                 let crypto = window.crypto;
                 let enc = new TextEncoder("utf-8"); // utf-8 to Uint8Array
                 let dec = new TextDecoder("utf-8");
+                // ascii to Uint8Array for encrypted messages so that they look nicer
+                let decAscii = new TextDecoder("ascii");
 
                 var nonceArray = new Uint8Array(12); // random Nonce (= number used once)
 
@@ -315,7 +326,7 @@
 
                 async function initialiseKeyExchange(toUuid) {
                     var privateKey = BigInt(Math.floor(Math.random() * Number(n))) // privateKey (random num between 0 and n)
-                    saveKey(toUuid, privateKey, "pending-sent") // save dummy key as pending sent
+                    saveKey(toUuid, privateKey, "pending-sent") // save key as pending sent
                     
                     var publicKey = squareMultiply(g, privateKey, n);
                     try {
@@ -335,7 +346,7 @@
                     var publicKey = squareMultiply(g, privateKey, n);
 
                     try {
-                        // post dummy key to communication partner
+                        // post key to communication partner
                         await axios.post("/api/", {
                             type: "keyExchangeConfirmation",
                             content: publicKey.toString(),
@@ -351,6 +362,7 @@
                 }
 
                 function completeKeyExchange(uuid, publicKey) {
+                    // calculate and save shared secret key (private key of client is in localstorage)
                     var sharedSecretKey = squareMultiply(BigInt(publicKey), BigInt(keyArray.value[uuid]["content"]), n);
                     saveKey(uuid, sharedSecretKey, "completed");
                 }
@@ -366,12 +378,14 @@
 
                 // get state of key by uuid
                 function getState(uuid) {
-                    if (!(uuid in keyArray.value)) {
-                        return "not-initialised"
-                    } else if (uuid == "?") {
+                    if (uuid == "?") {
                         return "completed"
                     } else {
-                        return keyArray.value[uuid]["state"]
+                        if (!(uuid in keyArray.value)) {
+                            return "not-initialised"
+                        } else {
+                            return keyArray.value[uuid]["state"]
+                        }
                     }
                 }
 
