@@ -17,7 +17,8 @@
     <div id="app">
         <div v-if="loggedIn">
             <h1>
-                Front End - {{username}}
+                <span style="vertical-align: middle;">Front End - {{username}}</span>
+                <span class="notification" v-if="notification">🟢</span> <!--TODO-->
                 <span class="openMenu" onclick="openMenu()">&#9776;</span>
             </h1>
             <div id="overlay">
@@ -57,10 +58,11 @@
                             </tr>
                         </table>
                     </p>
-                    <div class="small">client id: {{clientUuid}}</div>
+                    <div class="smaller">client id: {{clientUuid}}</div>
                     <p>
                         <button class="red" onclick="
-                        localStorage.removeItem('keys'); location.reload();">Alle Schlüssel löschen</button>
+                        localStorage.removeItem('keys'); 
+                        location.reload();">Alle Schlüssel löschen</button>
                     </p>
                     <p id="copyright">
                         Copyright &copy; 2021 Mattia Metzler.
@@ -70,22 +72,26 @@
             <h3>Benutzer</h3>
             <div class="smaller">
                 Hier befinden sich alle verfügbaren Benutzer.<br>
-                Durch anklicken kann der Benutzer, an den die Nachricht gesendet werden soll, gewählt werden.
             </div>
-            <ul id="userList">
-                <li v-for="(user, uuid) in availableUserList" v-on:click="setToUser(user, uuid)">
-                    <div>
-                        <span :class="{green: uuid === toUserUuid}">{{user}}</span>
-                        <span v-if="uuid != '?'">
-                            <button class="keyExchange" title="Schlüsselaustausch initialisieren" v-if="getState(uuid) == 'not-initialised'" v-on:click="initialiseKeyExchange(uuid)">🔑</button>
-                            <button class="keyExchange" title="Antwort wird abgewartet" v-if="getState(uuid) == 'pending-sent'">⏳</button>
-                            <button class="keyExchange" title="Schlüsselaustausch bestätigen" v-if="getState(uuid) == 'pending-received'" v-on:click="confirmKeyExchange(uuid)">☑️</button>
-                            <div class="small">id: {{uuid}}</div>
-                            <div class="small cropped" v-if="getState(uuid) == 'completed'">key: {{keyArray[uuid]["content"]}}</div>
-                        </span>
-                    </div>
-                </li>
-            </ul>
+            <div class="small">
+                Durch anklicken kann der Empfänger der Nachricht gewählt werden. Scrollen um weitere Benutzer anzuzeigen.
+            </div>
+            <div class="scroll">
+                <ul id="userList">
+                    <li v-for="(user, uuid) in availableUserList" v-on:click="setToUser(user, uuid)">
+                        <div>
+                            <span :class="{green: uuid === toUserUuid}">{{user}}</span>
+                            <span v-if="uuid != '?'">
+                                <button class="keyExchange" title="Schlüsselaustausch initialisieren" v-if="getState(uuid) == 'not-initialised'" v-on:click="initialiseKeyExchange(uuid)">🔑</button>
+                                <button class="keyExchange" title="Antwort wird abgewartet" v-if="getState(uuid) == 'pending-sent'">⏳</button>
+                                <button class="keyExchange" title="Schlüsselaustausch bestätigen" v-if="getState(uuid) == 'pending-received'" v-on:click="confirmKeyExchange(uuid)">☑️</button>
+                                <div class="small">id: {{uuid}}</div>
+                                <div class="small cropped" v-if="getState(uuid) == 'completed'">key: {{keyArray[uuid]["content"]}}</div>
+                            </span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
             <input type="text" v-model="input" v-on:keyup.enter="post()" :placeholder="'Neue Nachricht an ' + [[toUser]]">
             <button v-on:click="post()" id="postButton" v-if="getState(toUserUuid) == 'completed' || toUserUuid == '?'">Senden</button>
             <button v-else disabled>Senden</button>
@@ -95,19 +101,21 @@
                 Hier sind alle Nachrichten zu finden, welche von allen Benutzern versendet wurden.
             </div>
             <div class="small">
-                Die beiden Spalten dienen nur der Platzeffizienz, sie haben keine unterschiedlichen Bedeutungen.
+                Scrollen um weitere Nachrichten anzuzeigen.
             </div>
-            <ul id="messageList">
-                <li v-for="item in output">
-                    <div :class="{
-                        lightBlue: item['toUuid'] == clientUuid, 
-                        darkBlue: item['fromUuid'] == clientUuid && item['toUuid'] != '?',
-                        red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
-                        {{item["fromName"]}} 🠖 {{item["toName"]}}</div>
-                    <div class="message darkred" v-if="item['toUuid'] != clientUuid && item['fromUuid'] != clientUuid && item['toUuid'] != '?'">Verschlüsselte Nachricht:</div>
-                    <div class="message">{{item["content"]}}</div>
-                </li>
-            </ul>
+            <div class="scroll">
+                <ul id="messageList">
+                    <li v-for="item in output">
+                        <div :class="{
+                            lightBlue: item['toUuid'] == clientUuid, 
+                            darkBlue: item['fromUuid'] == clientUuid && item['toUuid'] != '?',
+                            red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
+                            {{item["fromName"]}} ⇨ {{item["toName"]}}</div>
+                        <div class="message darkred" v-if="item['toUuid'] != clientUuid && item['fromUuid'] != clientUuid && item['toUuid'] != '?'">Verschlüsselte Nachricht:</div>
+                        <div class="message">{{item["content"]}}</div>
+                    </li>
+                </ul>
+            </div>
         </div>
         <div v-else>
             <h1>Hallo</h1>
@@ -202,7 +210,7 @@
                                 let content = listEntry["content"]
                                 let messageArray = new Uint8Array(Object.values(listEntry["content"]));
 
-                                // if the message is addressed to the current user, decrypt it
+                                // if the message is addressed to the current user, decrypt it, and send notification
                                 if (listEntry["to"] == clientUuid.value) {
                                     content = decrypt(listEntry["from"], messageArray);
                                 } 
@@ -399,6 +407,9 @@
                     }
                 }
 
+                // notification
+                var notification = ref(false);
+
                 // update messages every second
                 setInterval(() => (get(), getUsernames()), 1000); // reload
                 
@@ -423,6 +434,7 @@
                     initialiseKeyExchange,
                     confirmKeyExchange,
                     getState,
+                    notification
                 }
             }
         }).mount("#app");

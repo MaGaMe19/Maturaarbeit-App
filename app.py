@@ -19,7 +19,7 @@ if not os.path.exists(filenameUsers):
     with open(filenameUsers, "w") as f:
         json.dump({
             "?": "Alle"
-        }, f)
+        }, f, indent=4)
 
 @api.GET("/api/")
 def get(request):
