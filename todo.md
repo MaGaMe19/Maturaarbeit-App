@@ -1,5 +1,5 @@
 # TODO
-#### Funktionalität
+#### App
 - [ ] Nonce generieren und übermitteln
 - [ ] Benachrichtigungen
 - [ ] Kommentare auf deutsch übersetzen
@@ -12,3 +12,4 @@
     - dummy.html &nbsp; --> &nbsp; app.html
     - dummy_style.css &nbsp; --> &nbsp; app-style.css
     - Github repo: Maturaarbeit-Back-End &nbsp; --> &nbsp; Maturaarbeit-App
+- [ ] Alle Links in repos und MA überprüfen
