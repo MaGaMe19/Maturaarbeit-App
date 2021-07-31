@@ -412,6 +412,9 @@
 
                 // update messages every second
                 setInterval(() => (get(), getUsernames()), 1000); // reload
+
+                // window size
+                // setInterval(() => console.log(`Window Size (w x h): ${window.innerWidth} x ${window.innerHeight}`), 100)
                 
                 /* ====================================== return ======================================= */
                 return {
@@ -445,7 +448,7 @@
             overlay.style.top = 0;
         }
         function closeMenu() {
-            overlay.style.top = -1000;
+            overlay.style.top = -2000;
         }
     </script>
 </body>
