@@ -58,7 +58,7 @@ def getUsers(request):
 # collect users
 @api.POST("/api/users/")
 def saveUsers(request, name:str):
-    newUuid = str(uuid4()) # create uuid (Universal Unique IDentification)
+    newUuid = str(uuid4()) # create uuid (Universal Unique IDentifier)
     with open(filenameUsers) as f:
         userList = json.load(f)
         # save username as value with the uuid as key

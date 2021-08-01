@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -93,7 +94,7 @@
                 </ul>
             </div>
             <input type="text" v-model="input" v-on:keyup.enter="post()" :placeholder="'Neue Nachricht an ' + [[toUser]]">
-            <button v-on:click="post()" id="postButton" v-if="getState(toUserUuid) == 'completed' || toUserUuid == '?'">Senden</button>
+            <button v-on:click="post()" v-if="getState(toUserUuid) == 'completed' || toUserUuid == '?'">Senden</button>
             <button v-else disabled>Senden</button>
             <button v-on:click="clear()" class="red">CLEAR</button>
             <h3>Nachrichten</h3>
@@ -109,7 +110,7 @@
                         <div :class="{
                             lightBlue: item['toUuid'] == clientUuid, 
                             darkBlue: item['fromUuid'] == clientUuid && item['toUuid'] != '?',
-                            red: item['toUuid'] != clientUuid && item['toUuid'] != '?'}">
+                            red: item['toUuid'] != clientUuid && item['toUuid'] != '?' && item['fromUuid'] != clientUuid}">
                             {{item["fromName"]}} ⇨ {{item["toName"]}}</div>
                         <div class="message darkred" v-if="item['toUuid'] != clientUuid && item['fromUuid'] != clientUuid && item['toUuid'] != '?'">Verschlüsselte Nachricht:</div>
                         <div class="message">{{item["content"]}}</div>
@@ -124,12 +125,6 @@
         </div>
     </div>
     <script>
-        /*  - Verschlüsselung
-                - Schlüsselaustausch        DONE
-                - Encoding & Encryption     DONE
-                - Nonce generieren und übermittlen
-        */
-
         var ref = Vue.ref;
         var computed = Vue.computed;
 
@@ -157,7 +152,7 @@
                     var resp = await axios.get("/api/users/");
                     userList.value = resp.data;
                     
-                    // separate list with users where the client is removed for displayed user list
+                    // separate list with users where the current client is removed for displayed user list
                     Object.assign(availableUserList.value, userList.value);
                     delete availableUserList.value[clientUuid.value];
                 }
@@ -251,8 +246,6 @@
 
                 // post a new text message
                 async function post() {
-                    console.log(getState(toUserUuid.value))
-                    console.log(toUserUuid.value);;
                     if (input.value != "" && getState(toUserUuid.value) == "completed") {
                         // check if key exchange has been completed
                         if (toUserUuid.value != "?") {
@@ -448,7 +441,7 @@
             overlay.style.top = 0;
         }
         function closeMenu() {
-            overlay.style.top = -2000;
+            overlay.style.top = "-2000px";
         }
     </script>
 </body>
