@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito&family=Poppins&family=Quicksand&family=Ubuntu&display=swap" rel="stylesheet">
     <link rel="preconnect" href="dummy_style.css">
     <link rel="stylesheet" href="dummy_style.css">
+    <link rel="icon" href="icon.ico">
     <script src="jschacha20.js"></script>
     <script src="https://unpkg.com/axios"></script>
     <script src="https://unpkg.com/vue@next"></script>
@@ -31,6 +32,7 @@
                     <p>
                         Vielen Dank für das Benutzen dieser Web-App, welche im Rahmen der Maturaarbeit von Mattia Metzler am Gymnasium
                         Neufeld entstanden ist.<br><br>
+                        Thema: End-zu-End-Verschlüsselung für eine Messaging-App<br>
                         Fach: Informatik <br> 
                         Betreuende Lehrperson: Marco Schmalz (SHM) <br>
                     </p>
@@ -64,6 +66,7 @@
                         <button class="red" onclick="
                         localStorage.removeItem('keys'); 
                         location.reload();">Alle Schlüssel löschen</button>
+                        <button v-on:click="clear()" class="red">Alle Nachrichten löschen</button>
                     </p>
                     <p id="copyright">
                         Copyright &copy; 2021 Mattia Metzler.
@@ -84,7 +87,7 @@
                             <span :class="{green: uuid === toUserUuid}">{{user}}</span>
                             <span v-if="uuid != '?'">
                                 <button class="keyExchange" title="Schlüsselaustausch initialisieren" v-if="getState(uuid) == 'not-initialised'" v-on:click="initialiseKeyExchange(uuid)">🔑</button>
-                                <button class="keyExchange" title="Antwort wird abgewartet" v-if="getState(uuid) == 'pending-sent'">⏳</button>
+                                <button class="keyExchange pending-sent" title="Antwort wird abgewartet" v-if="getState(uuid) == 'pending-sent'">⏳</button>
                                 <button class="keyExchange" title="Schlüsselaustausch bestätigen" v-if="getState(uuid) == 'pending-received'" v-on:click="confirmKeyExchange(uuid)">☑️</button>
                                 <div class="small">id: {{uuid}}</div>
                                 <div class="small cropped" v-if="getState(uuid) == 'completed'">key: {{keyArray[uuid]["content"]}}</div>
@@ -96,7 +99,6 @@
             <input type="text" v-model="input" v-on:keyup.enter="post()" :placeholder="'Neue Nachricht an ' + [[toUser]]">
             <button v-on:click="post()" v-if="getState(toUserUuid) == 'completed' || toUserUuid == '?'">Senden</button>
             <button v-else disabled>Senden</button>
-            <button v-on:click="clear()" class="red">CLEAR</button>
             <h3>Nachrichten</h3>
             <div class="smaller">
                 Hier sind alle Nachrichten zu finden, welche von allen Benutzern versendet wurden.
@@ -104,7 +106,7 @@
             <div class="small">
                 Scrollen um weitere Nachrichten anzuzeigen.
             </div>
-            <div class="scroll">
+            <div class="scroll" id="message-scroll">
                 <ul id="messageList">
                     <li v-for="item in output">
                         <div :class="{
@@ -119,7 +121,7 @@
             </div>
         </div>
         <div v-else>
-            <h1>Hallo</h1>
+            <h1>{{welcomeMessage}}</h1>
             <input type="text" placeholder="Dein Name" v-model="usernameInput" v-on:keyup.enter="saveUsername()">
             <button style="color:#00b300" v-on:click="saveUsername()">SAVE</button>
         </div>
@@ -190,7 +192,6 @@
 
                 async function get() {
                     /*  Funktionsweise:
-
                         - axios schickt eine request an den Server,
                         - await wartet bis die response zurück kommt
                         - data ist die antwort des Servers
@@ -263,6 +264,7 @@
                             alert(`Server Error while trying to send message (${error})`)
                         }
                         input.value = "";
+                        scrollMessagesDown();
                     }
                 }
 
@@ -406,9 +408,15 @@
                 // update messages every second
                 setInterval(() => (get(), getUsernames()), 1000); // reload
 
-                // window size
-                // setInterval(() => console.log(`Window Size (w x h): ${window.innerWidth} x ${window.innerHeight}`), 100)
-                
+                // welcome message on login screen
+                var welcomeMessage = ref("Guten Tag");
+                var currentHour = parseInt((new Date).toTimeString().substring(0, 2));
+                if (currentHour < 12) {
+                    welcomeMessage.value = "Guten Morgen";
+                } else if (currentHour >= 17) {
+                    welcomeMessage.value = "Guten Abend";
+                }
+
                 /* ====================================== return ======================================= */
                 return {
                     post,
@@ -430,7 +438,8 @@
                     initialiseKeyExchange,
                     confirmKeyExchange,
                     getState,
-                    notification
+                    notification,
+                    welcomeMessage
                 }
             }
         }).mount("#app");
@@ -443,6 +452,13 @@
         function closeMenu() {
             overlay.style.top = "-2000px";
         }
+
+        // scroll messages down after post
+        var messageList = document.querySelector("#message-scroll");
+        function scrollMessagesDown() {
+            setTimeout(() => (messageList.scrollTop = messageList.scrollHeight), 1000);
+        }
+        scrollMessagesDown();
     </script>
 </body>
 </html>
