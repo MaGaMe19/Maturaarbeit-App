@@ -1,5 +1,6 @@
 import collections
 # import crypt
+crypt = None;
 import datetime
 import functools
 import inspect
