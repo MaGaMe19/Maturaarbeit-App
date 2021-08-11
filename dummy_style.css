@@ -7,6 +7,7 @@
     --color-disabled: #a7a7a7;
     --scroll-max-height: 21vh;
     --body-padding-side: 6vw;
+    --transition-time: .3s;
 }
 
 body {
@@ -73,7 +74,7 @@ button {
     padding: 7px;
     border-radius: 5px;
     margin-right: 5px;
-    transition: .3s;
+    transition: background-color var(--transition-time);
 }
 button:hover {
     background-color: var(--color-input-hover);
@@ -86,6 +87,9 @@ button:enabled {
 button:disabled {
     color: var(--color-disabled);
     border: 1px solid var(--color-disabled);
+}
+button:disabled:hover {
+    background-color: var(--color-input);
 }
 button:active {
     background-color: var(--color-input-active);
@@ -144,14 +148,15 @@ button.pending-sent:hover {
     font-size: 15px;
 }
 .cropped {
-    font-family: monospace;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 40vw;
-    overflow: hidden;
-}
-.cropped span {
     font-family: monospace;
+    white-space: nowrap;
+    width: 250px;
+    overflow: hidden;
+    transition: width var(--transition-time) ease-out;
+}
+.cropped:hover {
+    width: 60vw;
 }
 .message {
     margin-left: 20px;
@@ -164,7 +169,7 @@ button.pending-sent:hover {
 
 /* ======================================= colors ======================================= */
 .red {
-    color: #ff1010 !important;
+    color: #e40000 !important;
 }
 .darkred {
     color: #9c2323;
@@ -173,10 +178,10 @@ button.pending-sent:hover {
     color: #009c3c !important;
 }
 .lightBlue {
-    color: #1cb3ff !important;
+    color: #008ed6 !important;
 }
 .darkBlue {
-    color: #3866ff !important;
+    color: #3765fb !important;
 }
 div.lightBlue::after, div.darkBlue::after {
     content: " 🔐";
@@ -189,13 +194,13 @@ div.lightBlue::after, div.darkBlue::after {
 .openMenu {
     float: right;
     cursor: pointer;
-    transition: .2s;
+    transition: color var(--transition-time);
     vertical-align: middle;
 }
 .closeMenu {
     float: right;
     cursor: pointer;
-    transition: .2s;
+    transition: color var(--transition-time);
 }
 .openMenu:hover, .closeMenu:hover {
     color: #4680ff;
@@ -211,7 +216,7 @@ div.lightBlue::after, div.darkBlue::after {
     left: 0;
     top: -2000px;
     background: rgba(85, 85, 85, 0.9);
-    transition: .3s ease-out;
+    transition: top var(--transition-time) ease-out;
 }
 #overlay p {
     margin-top: 30px;

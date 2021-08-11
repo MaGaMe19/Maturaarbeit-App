@@ -189,6 +189,7 @@
                 /* =================================== get and post ==================================== */
                 var input = ref("");
                 var output = ref([]);
+                var currentMessages = [];
 
                 async function get() {
                     /*  Funktionsweise:
@@ -198,7 +199,7 @@
                         - das Ganze muss in einer async Funktion ablaufen
                     */
                     var resp = await axios.get("/api/"); // get all messages
-                    let messageList = []; 
+                    let messageList = [];
                     if (resp.data.length != 0) {
                         for (const listEntry of resp.data) {
                             // if the message is a text message, save it to the list to be displayed
@@ -206,7 +207,7 @@
                                 let content = listEntry["content"]
                                 let messageArray = new Uint8Array(Object.values(listEntry["content"]));
 
-                                // if the message is addressed to the current user, decrypt it, and send notification
+                                // if the message is addressed to the current user, decrypt it
                                 if (listEntry["to"] == clientUuid.value) {
                                     content = decrypt(listEntry["from"], messageArray);
                                 } 
@@ -226,6 +227,8 @@
                                     "toName": userList.value[listEntry["to"]],
                                     "content": content
                                 })
+                                currentMessages = messageList;
+
                                 output.value = messageList;
                             } else if (listEntry["type"] == "keyExchange" && listEntry["to"] == clientUuid.value) {
                                 // if it is a key exchange, save the key in localstorage
@@ -238,6 +241,12 @@
                                     completeKeyExchange(listEntry["from"], listEntry["content"])
                                 }
                             }
+                        }
+                        // check if latest message is addressed to current user if so display notification
+                        if (clientUuid.value == currentMessages[currentMessages.length - 1]["toUuid"]) {
+                            notification.value = true;
+                        } else {
+                            notification.value = false;
                         }
                     } else {
                         output.value = [];
