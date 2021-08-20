@@ -165,6 +165,7 @@ button.pending-sent:hover {
     font-size: 0.7em;
     vertical-align: middle;
     margin-left: 15px;
+    cursor: pointer;
 }
 
 /* ======================================= colors ======================================= */

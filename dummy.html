@@ -20,7 +20,7 @@
         <div v-if="loggedIn">
             <h1>
                 <span style="vertical-align: middle;">Front End - {{username}}</span>
-                <span class="notification" v-if="notification">🟢</span> <!--TODO-->
+                <span class="notification" onclick="scrollMessagesDown(true)" v-if="notification">🟢</span> <!--TODO-->
                 <span class="openMenu" onclick="openMenu()">&#9776;</span>
             </h1>
             <div id="overlay">
@@ -273,7 +273,7 @@
                             alert(`Server Error while trying to send message (${error})`)
                         }
                         input.value = "";
-                        scrollMessagesDown();
+                        scrollMessagesDown(false);
                     }
                 }
 
@@ -464,10 +464,13 @@
 
         // scroll messages down after post
         var messageList = document.querySelector("#message-scroll");
-        function scrollMessagesDown() {
-            setTimeout(() => (messageList.scrollTop = messageList.scrollHeight), 1000);
+        function scrollMessagesDown(instantly) {
+            if (instantly)
+                messageList.scrollTop = messageList.scrollHeight
+            else
+                setTimeout(() => (messageList.scrollTop = messageList.scrollHeight), 1000);
         }
-        scrollMessagesDown();
+        scrollMessagesDown(false);
     </script>
 </body>
 </html>
