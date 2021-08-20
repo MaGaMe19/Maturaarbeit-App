@@ -1,8 +1,10 @@
 # TODO
 #### App
 - [ ] Nonce generieren und übermitteln
-- [ ] Benachrichtigungen
+- [x] Benachrichtigungen
 - [ ] Kommentare auf deutsch übersetzen
+
+- [ ] Attacke demonstrieren
 
 <br>
 
