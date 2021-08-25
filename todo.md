@@ -3,10 +3,14 @@
 - [ ] Nonce generieren und übermitteln
 - [x] Benachrichtigungen
 - [ ] Kommentare auf deutsch übersetzen
-
+- [ ] SSE implementieren
 - [ ] Attacke demonstrieren
 
 <br>
+
+#### Recherche
+- [x] SSE (Server Sent Events)
+    - [x] EventSource
 
 #### Vor Abgabe
 - [ ] Umbennenungen (Namen in MA anpassen!):
