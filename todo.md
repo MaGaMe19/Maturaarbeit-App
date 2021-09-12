@@ -11,6 +11,7 @@
 #### Recherche
 - [x] SSE (Server Sent Events)
     - [x] EventSource
+    - [x] api_utils.py: PubSub
 
 #### Vor Abgabe
 - [ ] Umbennenungen (Namen in MA anpassen!):
