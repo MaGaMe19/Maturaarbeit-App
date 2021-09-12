@@ -149,7 +149,6 @@ button.pending-sent:hover {
 }
 .cropped {
     text-overflow: ellipsis;
-    font-family: monospace;
     white-space: nowrap;
     width: 250px;
     overflow: hidden;
