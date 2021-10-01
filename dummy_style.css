@@ -183,6 +183,13 @@ button.pending-sent:hover {
 .darkBlue {
     color: #3765fb !important;
 }
+.rainbow {
+    background-image: linear-gradient(80deg, #ff0000, #FF7F00, #d3d331, #009200, #0000FF, #4B0082, #9400D3);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    font-size: 1.5em;
+}
 div.lightBlue::after, div.darkBlue::after {
     content: " 🔐";
 }

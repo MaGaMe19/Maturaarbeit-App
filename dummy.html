@@ -119,7 +119,9 @@
                             red: item['toUuid'] != clientUuid && item['toUuid'] != '?' && item['fromUuid'] != clientUuid}">
                             {{item["fromName"]}} ⇨ {{item["toName"]}}</div>
                         <div class="message darkred" v-if="item['toUuid'] != clientUuid && item['fromUuid'] != clientUuid && item['toUuid'] != '?'">Verschlüsselte Nachricht:</div>
-                        <div class="message">{{item["content"]}}</div>
+                        <div class="message" >
+                            <span :class="{rainbow: item['content'] == '\\{0_0}/'}">{{item["content"]}}</span>
+                        </div>
                     </li>
                 </ul>
             </div>
@@ -223,7 +225,10 @@
                                 else if (listEntry["to"] != "?") {
                                     content = decAscii.decode(messageArray);
                                 }
-
+                                // secret
+                                if (content.toLowerCase() == "5c7b305f307d2f") {
+                                    content = "\\{0_0}/";
+                                }
                                 messageList.push({
                                     "fromUuid": listEntry["from"],
                                     "fromName": userList.value[listEntry["from"]],
