@@ -45,7 +45,7 @@ def post(request, content, fromUser:str, toUser:str, type:str):
     with open("data.json", "w") as f:
         json.dump(entryList, f, indent=4)
 
-    return None
+    return f'Server: Nachricht "{content}" mit Sender "{getUsers(None)[fromUser]}" und Empfänger "{getUsers(None)[toUser]}" wurde zu den Nachrichten Hinzugefügt.'
 
 # return userList to front-end for connections
 @api.GET("/api/users/")
@@ -75,5 +75,7 @@ def saveUsers(request, name:str):
 def delete(request):
     with open(filename, "w") as f:
         json.dump([], f)
+    
+    return f"Server: Alle Nachrichten wurden gelöscht."
 
 api_utils.run(api)

@@ -243,6 +243,7 @@
                                 // if it is a key exchange, save the key in localstorage
                                 if (!(getState(listEntry["from"]) == "completed")) {
                                     saveKey(listEntry["from"], listEntry["content"], "pending-received")
+                                    colorLog(`Schlüsselaustausch wurde von ${userList.value[listEntry["from"]]} initialisiert.\nErhaltener öffentlicher Schlüssel: ${listEntry["content"]}`);
                                 }
                             } else if (listEntry["type"] == "keyExchangeConfirmation" && listEntry["to"] == clientUuid.value) {
                                 if (!(getState(listEntry["from"]) == "completed")) {
@@ -251,8 +252,8 @@
                                 }
                             }
                         }
-                        // check if latest message is addressed to current user if so display notification
-                        if (clientUuid.value == currentMessages[currentMessages.length - 1]["toUuid"]) {
+                        // check if latest message is addressed to current user, if so display notification
+                        if (currentMessages.length != 0 && clientUuid.value == currentMessages[currentMessages.length - 1]["toUuid"]) {
                             notification.value = true;
                         } else {
                             notification.value = false;
@@ -273,11 +274,13 @@
                             content = input.value;
                         }
                         try {
-                            await axios.post("/api/", {
+                            resp = await axios.post("/api/", {
                                 type:"message", 
                                 content: content, 
                                 fromUser: clientUuid.value, 
                                 toUser: toUserUuid.value});
+                            colorLog(`Client: Nachricht "${content}" mit dem Ziel "${userList.value[toUserUuid.value]}" wurde an den Server gesendet.`);
+                            colorLog(resp.data);
                         } catch (error) {
                             alert(`Server Error while trying to send message (${error})`)
                         }
@@ -326,6 +329,7 @@
                     const encryptor = new JSChaCha20(keyUint8Array, nonceArray); // chacha20 instance
 
                     let rawEncryptedMessage = encryptor.encrypt(enc.encode(message));
+                    colorLog(`Client: Nachricht "${message}" wurde mit dem Schlüssel "${BigInt(keyArray.value[uuid]["content"])}" zugehörig zum Benutzer "${userList.value[uuid]}" verschlüsselt.`)
                     return rawEncryptedMessage;
                 }
                 
@@ -357,9 +361,12 @@
                             content: publicKey.toString(), 
                             fromUser: clientUuid.value, 
                             toUser: toUuid})
-                    } catch (error) {
-                        alert(`Server Error while trying to initialise key exchange (${error})`)
-                    }
+
+                        } catch (error) {
+                            alert(`Server Error while trying to initialise key exchange (${error})`)
+                        }
+
+                    colorLog(`Schlüsselaustausch mit "${userList.value[toUuid]}" initialisert.\nPrivater Schlüssel: ${privateKey}\nÖffentlicher Schlüssel: ${publicKey}`);
                 }
 
                 async function confirmKeyExchange(uuid) {
@@ -380,12 +387,16 @@
                     // calculate and save shared secret key (public key of recipient is in localstorage)
                     var sharedSecretKey = squareMultiply(BigInt(keyArray.value[uuid]["content"]), privateKey, n);
                     saveKey(uuid, sharedSecretKey, "completed");
+
+                    colorLog(`Schlüsselaustausch mit "${userList.value[uuid]}" bestätigt.\nPrivater Schlüssel: ${privateKey}\nÖffentlicher Schlüssel: ${publicKey}\nGemeinsamer Geheimer Schlüssel: ${sharedSecretKey}`);
                 }
 
                 function completeKeyExchange(uuid, publicKey) {
-                    // calculate and save shared secret key (private key of client is in localstorage)
+                    // calculate and save shared secret key (private key of client is in localstorage, publicKey is the public key of the other person)
                     var sharedSecretKey = squareMultiply(BigInt(publicKey), BigInt(keyArray.value[uuid]["content"]), n);
                     saveKey(uuid, sharedSecretKey, "completed");
+
+                    colorLog(`Schlüsselaustausch wurde von "${userList.value[uuid]}" bestätigt.\nGemeinsamer Geheimer Schlüssel: ${sharedSecretKey}`);
                 }
 
                 // save a key with the correct uuid in localstorage
@@ -414,7 +425,8 @@
                 // clear all text and key exchange messages
                 async function clear() {
                     try {
-                        await axios.delete("/api/");  
+                        resp = await axios.delete("/api/");
+                        colorLog(resp.data);
                     } catch (error) {
                         alert(`Server Error while trying to clear messages (${error})`);
                     }
@@ -480,6 +492,11 @@
                 setTimeout(() => (messageList.scrollTop = messageList.scrollHeight), 1000);
         }
         scrollMessagesDown(false);
+
+        // colored console output
+        function colorLog(logText) {
+            console.log(`%c${logText}`, "color:#698bfc")
+        }
     </script>
 </body>
 </html>
