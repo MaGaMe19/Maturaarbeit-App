@@ -3,7 +3,7 @@
 - [ ] Nonce generieren und übermitteln (vielleicht)
 - [x] Benachrichtigungen
 - [ ] Kommentare auf deutsch übersetzen
-- [ ] Alle Aktionen (Schlüsselaustausch, Menu) mit colorLog in Konsole loggen
+- [x] Alle Aktionen (Schlüsselaustausch, Menu) mit colorLog in Konsole loggen
 
 <br>
 
