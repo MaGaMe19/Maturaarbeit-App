@@ -1,10 +1,9 @@
 # TODO
 #### App
-- [ ] Nonce generieren und übermitteln
+- [ ] Nonce generieren und übermitteln (vielleicht)
 - [x] Benachrichtigungen
 - [ ] Kommentare auf deutsch übersetzen
-- [ ] SSE implementieren
-- [ ] Attacke demonstrieren
+- [ ] Alle Aktionen (Schlüsselaustausch, Menu) mit colorLog in Konsole loggen
 
 <br>
 
