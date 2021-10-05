@@ -2,7 +2,9 @@
 #### App
 - [ ] Nonce generieren und übermitteln (vielleicht)
 - [x] Benachrichtigungen
-- [ ] Kommentare auf deutsch übersetzen
+- [ ] Kommentare auf deutsch übersetzen:
+    - [x] app.py
+    - [ ] dummy.html
 - [x] Alle Aktionen (Schlüsselaustausch, Menu) mit colorLog in Konsole loggen
 
 <br>
