@@ -1,6 +1,6 @@
-# Back-End
+# App
 
-Back-End zu [Maturaarbeit-Front-End](https://github.com/MaGaMe19/Maturaarbeit-Front-End).
+Web-App der Maturaarbeit von Mattia Metzler
 
 Unterstüzt durch [api-utils.py](https://github.com/smlz/poschtizeddel/blob/main/final/server/api_utils.py) von [smlz](https://github.com/smlz).
 
