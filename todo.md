@@ -14,7 +14,8 @@
     - [x] EventSource
     - [x] api_utils.py: PubSub
 
-#### Vor Abgabe
+#### Schriftliche Arbeit
+- [ ] Überarbeiten + Blocksatz (Fertig bis u. mit Kapitel 3)
 - [ ] Umbennenungen (Namen in MA anpassen!):
     - app.py &nbsp; --> &nbsp; server.py
     - dummy.html &nbsp; --> &nbsp; app.html
