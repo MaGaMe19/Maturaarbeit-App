@@ -15,7 +15,7 @@
     - [x] api_utils.py: PubSub
 
 #### Schriftliche Arbeit
-- [ ] Überarbeiten + Blocksatz (Fertig bis u. mit Kapitel 3)
+- [ ] Überarbeiten + Blocksatz (Fertig bis u. mit Kapitel 4)
 - [ ] Umbennenungen (Namen in MA anpassen!):
     - app.py &nbsp; --> &nbsp; server.py
     - dummy.html &nbsp; --> &nbsp; app.html
