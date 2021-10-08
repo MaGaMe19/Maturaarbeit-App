@@ -15,8 +15,9 @@
     - [x] api_utils.py: PubSub
 
 #### Schriftliche Arbeit
-- [ ] Überarbeiten + Blocksatz (Fertig bis u. mit Kapitel 4)
-- [ ] Alle Links  überprüfen
+- [ ] Einleitung
+- [x] Überarbeiten + Blocksatz
+- [ ] Alle Links überprüfen
 
 #### Sonstiges
 - [ ] Alle repos öffentlich schalten
