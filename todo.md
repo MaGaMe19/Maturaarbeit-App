@@ -15,7 +15,7 @@
     - [x] api_utils.py: PubSub
 
 #### Schriftliche Arbeit
-- [ ] Einleitung
+- [x] Einleitung
 - [x] Überarbeiten + Blocksatz
 - [ ] Alle Links überprüfen
 
