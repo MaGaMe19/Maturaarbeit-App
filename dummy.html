@@ -67,9 +67,9 @@
                     </p>
                     <div class="smaller">client id: {{clientUuid}}</div>
                     <p>
-                        <button class="red" onclick="
+                        <!-- <button class="red" onclick="
                         localStorage.removeItem('keys'); 
-                        location.reload();">Alle Schlüssel löschen</button>
+                        location.reload();">Alle Schlüssel löschen</button> -->
                         <button v-on:click="clear()" class="red">Alle Nachrichten löschen</button>
                     </p>
                     <p id="copyright">
@@ -133,6 +133,7 @@
         </div>
     </div>
     <script>
+        // Vue-Komponenten
         var ref = Vue.ref;
         var computed = Vue.computed;
 
@@ -140,33 +141,35 @@
             setup() {
                 localStorage.removeItem("theme");
                 /* ================================= username handling ================================= */
-                // get username, uuid from localstorage, change title accordingly
+                // Benutzername und uuid vom Localstorage abrufen, Titel der Website ändern
                 let username = ref(localStorage.getItem("username"));
                 let clientUuid = ref(localStorage.getItem("uuid"));
                 if (username.value != null) {
                     document.title = `Front End - ${username.value}`;
                 }
 
-                // check if user is logged in
+                // überprüfen ob der Benutzer eingeloggt ist
                 let loggedIn = computed(function () {
                     return username.value != null;
                 })
 
+                // Benutzerlisten
                 let usernameInput = ref("");
                 let userList = ref({});
                 let availableUserList = ref({});
 
+                // alle Benutzer abrufen
                 async function getUsernames() {
                     var resp = await axios.get("/api/users/");
                     userList.value = resp.data;
                     
-                    // separate list with users where the current client is removed for displayed user list
+                    // separate Liste mit Benutzern ohne den aktuellen Client, um diese auf der Website anzuzeigen
                     Object.assign(availableUserList.value, userList.value);
                     delete availableUserList.value[clientUuid.value];
                 }
                 getUsernames();
 
-                // save the given username from the login page in localstorage and on the server
+                // eingegebener Benutzername speichern
                 async function saveUsername() {
                     if (usernameInput.value != "") {
                         username.value = usernameInput.value;
@@ -182,11 +185,11 @@
                     }
                 }
 
-                // default recipient
+                // standard Empfänger
                 let toUser = ref("Alle");
                 let toUserUuid = ref("?");
 
-                // change recipient
+                // Empfänger ändern bei Klick auf Benutzer
                 function setToUser(user, uuid) {
                     toUser.value = user;
                     toUserUuid.value = uuid;
@@ -197,6 +200,7 @@
                 var output = ref([]);
                 var currentMessages = [];
 
+                // alle Nachrichten abrufen
                 async function get() {
                     /*  Funktionsweise:
                         - axios schickt eine request an den Server,
@@ -204,28 +208,28 @@
                         - data ist die antwort des Servers
                         - das Ganze muss in einer async Funktion ablaufen
                     */
-                    var resp = await axios.get("/api/"); // get all messages
+                    var resp = await axios.get("/api/");
                     let messageList = [];
                     if (resp.data.length != 0) {
                         for (const listEntry of resp.data) {
-                            // if the message is a text message, save it to the list to be displayed
+                            // Wenn es sich um eine Nachricht handelt, wird sie auf der Website angezeigt
                             if (listEntry["type"] == "message") {
                                 let content = listEntry["content"]
                                 let messageArray = new Uint8Array(Object.values(listEntry["content"]));
 
-                                // if the message is addressed to the current user, decrypt it
+                                // ist die Nachricht an den momentanen Benutzer gerichtet, wird sie entschlüsselt mit dem Schlüssel im localstorage
                                 if (listEntry["to"] == clientUuid.value) {
                                     content = decrypt(listEntry["from"], messageArray);
                                 } 
-                                // if the message comes from the current user, decrypt it as well
+                                // stammt die Nachricht vom aktuellen Benutzer, wird sie ebenfalls entschlüsselt
                                 else if (listEntry["from"] == clientUuid.value && listEntry["to"] != "?") {
                                     content = decrypt(listEntry["to"], messageArray);
                                 }
-                                // if the message is neither by nor for the current user (but not for everybody), decode it
+                                // ist die Nachricht weder an den momentanen Benutzer gerichtet noch stammt sie vom aktuellen Benutzer, wird sie nicht entschlüsselt, nur in Text gewandelt
                                 else if (listEntry["to"] != "?") {
                                     content = decAscii.decode(messageArray);
                                 }
-                                // secret
+                                // secret - siehe Titelseite MA
                                 if (content.toLowerCase() == "5c7b305f307d2f") {
                                     content = "\\{0_0}/";
                                 }
@@ -239,20 +243,22 @@
                                 currentMessages = messageList;
 
                                 output.value = messageList;
+                            
+                            // handelt es sich um einen Schlüsselaustausch so wird der Schlüssel gespeichert
                             } else if (listEntry["type"] == "keyExchange" && listEntry["to"] == clientUuid.value) {
-                                // if it is a key exchange, save the key in localstorage
                                 if (!(getState(listEntry["from"]) == "completed")) {
+                                    // der erhaltene öffentliche Schlüssel wird abgespeichert
                                     saveKey(listEntry["from"], listEntry["content"], "pending-received")
                                     colorLog(`Schlüsselaustausch wurde von ${userList.value[listEntry["from"]]} initialisiert.\nErhaltener öffentlicher Schlüssel: ${listEntry["content"]}`);
                                 }
                             } else if (listEntry["type"] == "keyExchangeConfirmation" && listEntry["to"] == clientUuid.value) {
+                                // der Schlüsselaustausch wurde vom Gesprächspartner bestätigt
                                 if (!(getState(listEntry["from"]) == "completed")) {
-                                    // saveKey(listEntry["from"], listEntry["content"] * keyArray.value[listEntry["from"]]["content"], "completed");
                                     completeKeyExchange(listEntry["from"], listEntry["content"])
                                 }
                             }
                         }
-                        // check if latest message is addressed to current user, if so display notification
+                        // überprüfen ob die letzte Nachricht an den momentanen Benutzer gerichtet ist, falls ja, Benachrichtigung anzeigen.
                         if (currentMessages.length != 0 && clientUuid.value == currentMessages[currentMessages.length - 1]["toUuid"]) {
                             notification.value = true;
                         } else {
@@ -264,15 +270,16 @@
                 }
                 get();
 
-                // post a new text message
+                // eine neue Nachricht hinzufügen
                 async function post() {
                     if (input.value != "" && getState(toUserUuid.value) == "completed") {
-                        // check if key exchange has been completed
+                        // überprüfen ob der Schlüsselaustausch mit dem Empfänger abgeschlossen ist, falls ja, Nachricht verschlüsseln
                         if (toUserUuid.value != "?") {
                             content = encrypt(toUserUuid.value, input.value);
                         } else {
                             content = input.value;
                         }
+                        // Nachricht an Server schicken
                         try {
                             resp = await axios.post("/api/", {
                                 type:"message", 
@@ -291,51 +298,55 @@
 
                 /* ===================================== Encryption ==================================== */
                 let crypto = window.crypto;
-                let enc = new TextEncoder("utf-8"); // utf-8 to Uint8Array
+                let enc = new TextEncoder("utf-8"); // utf-8 zu Uint8Array, benötigt um Nachrichten zu verschlüsseln
                 let dec = new TextDecoder("utf-8");
-                // ascii to Uint8Array for encrypted messages so that they look nicer
+                // Uint8Array zu Ascii für verschlüsselte Nachrichten damit sie schöner aussehen
                 let decAscii = new TextDecoder("ascii");
 
-                var nonceArray = new Uint8Array(12); // random Nonce (= number used once)
+                var nonceArray = new Uint8Array(12); // zufällige Nonce (= number used once), benötigt um Nachrichten zu verschlüsseln
 
-                // algorithm to calculate big power
+                // square-and-multiply-Algorithmus (siehe Maturaarbeit, Kapitel 3.3.2.)
                 function squareMultiply(x, k, mod) {
                     var y = x % mod; // Zwischenergebnis
-                    var kBinary = k.toString(2); // exponent in binary
-                    kBinary = kBinary.replace(kBinary[0], ""); // remove first "1" -> start with x (1^2 * x = x)
+                    var kBinary = k.toString(2); // exponent in binör
+                    kBinary = kBinary.replace(kBinary[0], ""); // erstes "1" entfernen -> mit x starten (1^2 * x = x)
                     
                     for (const i of kBinary) {
-                        y = (y * y) % mod;
+                        y = (y * y) % mod; // für jedes "Q" wird quadriert
                         if (i == 1) {
-                            y = (y * x) % mod;
+                            y = (y * x) % mod; // für jedes "M" wird mit x multipliziert
                         }
                     }
                     return y;
                 }
 
                 var g = 5n; // generator
-                // prime, 256-Bit https://asecuritysite.com/encryption/random3?val=256
+                // primzahl, 256-Bit https://asecuritysite.com/encryption/random3?val=256
                 var n = 40607624323698004944288610351048360638553718145867992171012767459255954639447n;
                 
+                // Nachrichten verschlüsseln
                 function encrypt(uuid, message) {
                     let s = BigInt(keyArray.value[uuid]["content"]);
 
+                    // Schlüssel in Uint8Array umwandeln durch Bit-Shifting
                     let keyUint8Array = new Uint8Array(32);
                     for (let i = 0; i < keyUint8Array.length; i++) {
                         keyUint8Array[i] = Number(s % 256n);
                         s = s >> 8n;
                     }
 
-                    const encryptor = new JSChaCha20(keyUint8Array, nonceArray); // chacha20 instance
+                    const encryptor = new JSChaCha20(keyUint8Array, nonceArray); // chacha20-Verschlüsselungsalgorithmus
 
                     let rawEncryptedMessage = encryptor.encrypt(enc.encode(message));
                     colorLog(`Client: Nachricht "${message}" wurde mit dem Schlüssel "${BigInt(keyArray.value[uuid]["content"])}" zugehörig zum Benutzer "${userList.value[uuid]}" verschlüsselt.`)
                     return rawEncryptedMessage;
                 }
                 
+                // Nachricht entschlüsseln
                 function decrypt(uuid, messageUint8) {
                     let s = BigInt(keyArray.value[uuid]["content"]);
 
+                    // Schlüssel in Uint8Array umwandeln durch Bit-Shifting
                     let keyUint8Array = new Uint8Array(32);
                     for (let i = 0; i < keyUint8Array.length; i++) {
                         keyUint8Array[i] = Number(s % 256n);
@@ -346,16 +357,17 @@
                     return dec.decode(decryptor.decrypt(messageUint8));
                 }
 
-                // get keys from localstorage
+                // Schlüssel vom Localstorage abrufen
                 let keyArray = ref(JSON.parse(localStorage.getItem("keys")) || {});
 
+                // Schlüsselaustausch initialisieren
                 async function initialiseKeyExchange(toUuid) {
-                    var privateKey = BigInt(Math.floor(Math.random() * Number(n))) // privateKey (random num between 0 and n)
-                    saveKey(toUuid, privateKey, "pending-sent") // save key as pending sent
+                    var privateKey = BigInt(Math.floor(Math.random() * Number(n))); // privater Schlüssel
+                    saveKey(toUuid, privateKey, "pending-sent"); // privater Schlüssel im Localstorage speichern
                     
-                    var publicKey = squareMultiply(g, privateKey, n);
+                    var publicKey = squareMultiply(g, privateKey, n); // öffentlicher Schlüssel
                     try {
-                        // post key to communication partner
+                        // öffentlicher Schlüssel dem Empfänger übermittlen
                         await axios.post("/api/", {
                             type:"keyExchange", 
                             content: publicKey.toString(), 
@@ -369,12 +381,13 @@
                     colorLog(`Schlüsselaustausch mit "${userList.value[toUuid]}" initialisert.\nPrivater Schlüssel: ${privateKey}\nÖffentlicher Schlüssel: ${publicKey}`);
                 }
 
+                // Schlüsselaustausch bestätigen
                 async function confirmKeyExchange(uuid) {
-                    var privateKey = BigInt(Math.floor(Math.random() * Number(n))); // privateKey (random num between 0 and n)
-                    var publicKey = squareMultiply(g, privateKey, n);
+                    var privateKey = BigInt(Math.floor(Math.random() * Number(n))); // privater Schlüssel
+                    var publicKey = squareMultiply(g, privateKey, n); // öffentlicher Schlüssel
 
                     try {
-                        // post key to communication partner
+                        // öffentlicher Schlüssel dem Empfänger übermittlen
                         await axios.post("/api/", {
                             type: "keyExchangeConfirmation",
                             content: publicKey.toString(),
@@ -384,22 +397,23 @@
                         alert(`Server Error while trying to confirm key exchange (${error})`)
                     }
 
-                    // calculate and save shared secret key (public key of recipient is in localstorage)
+                    // gemeinsamer geheimer Schlüssel berechnen und abspeichern (Öffentlicher Schlüssel des Empfängers befindet sich im Localstorage)
                     var sharedSecretKey = squareMultiply(BigInt(keyArray.value[uuid]["content"]), privateKey, n);
                     saveKey(uuid, sharedSecretKey, "completed");
 
                     colorLog(`Schlüsselaustausch mit "${userList.value[uuid]}" bestätigt.\nPrivater Schlüssel: ${privateKey}\nÖffentlicher Schlüssel: ${publicKey}\nGemeinsamer Geheimer Schlüssel: ${sharedSecretKey}`);
                 }
 
+                // Schlüsselaustausch abschliessen, nachdem der Gesprächspartner ihn bestätigt hat
                 function completeKeyExchange(uuid, publicKey) {
-                    // calculate and save shared secret key (private key of client is in localstorage, publicKey is the public key of the other person)
+                    // gemeinsamer geheimer Schlüssel berechnen und abspeichern (eigener privater Schlüssel befindet sich im Localstorage, öffentlicher Schlüssel des Empfängers erhält man)
                     var sharedSecretKey = squareMultiply(BigInt(publicKey), BigInt(keyArray.value[uuid]["content"]), n);
                     saveKey(uuid, sharedSecretKey, "completed");
 
                     colorLog(`Schlüsselaustausch wurde von "${userList.value[uuid]}" bestätigt.\nGemeinsamer Geheimer Schlüssel: ${sharedSecretKey}`);
                 }
 
-                // save a key with the correct uuid in localstorage
+                // Funktion um Schlüssel abzuspeichern
                 function saveKey(uuid, key, state) {
                     keyArray.value[uuid] = {
                         "content": key.toString(),
@@ -408,7 +422,7 @@
                     localStorage.setItem("keys", JSON.stringify(keyArray.value));
                 }
 
-                // get state of key by uuid
+                // Funktion um den Status des Schlüsselaustausches zu erhalten
                 function getState(uuid) {
                     if (uuid == "?") {
                         return "completed"
@@ -422,7 +436,7 @@
                 }
 
                 /* ================================= utility functions ================================= */
-                // clear all text and key exchange messages
+                // Alle Nachrichten löschen
                 async function clear() {
                     try {
                         resp = await axios.delete("/api/");
@@ -432,13 +446,13 @@
                     }
                 }
 
-                // notification
+                // Benachrichtigung
                 var notification = ref(false);
 
-                // update messages every second
+                // Nachrichten jede Sekunde aktualisieren
                 setInterval(() => (get(), getUsernames()), 1000); // reload
 
-                // welcome message on login screen
+                // Begrüssungsnachricht auf der Anmeldeseite mit richtiger Zeit
                 var welcomeMessage = ref("Guten Tag");
                 var currentHour = parseInt((new Date).toTimeString().substring(0, 2));
                 if (currentHour < 12) {
@@ -474,8 +488,8 @@
             }
         }).mount("#app");
 
+        // Menu öffnen und schliessen
         var overlay = document.querySelector("#overlay");
-
         function openMenu() {
             overlay.style.top = 0;
         }
@@ -483,7 +497,7 @@
             overlay.style.top = "-2000px";
         }
 
-        // scroll messages down after post
+        // Nachrichten nach unten scrollen, wenn man eine neue Nachricht hinzufügt
         var messageList = document.querySelector("#message-scroll");
         function scrollMessagesDown(instantly) {
             if (instantly)
@@ -493,7 +507,7 @@
         }
         scrollMessagesDown(false);
 
-        // colored console output
+        // Farbige Erklärungen in der Konsole
         function colorLog(logText) {
             console.log(`%c${logText}`, "color:#698bfc")
         }
