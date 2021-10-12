@@ -1,8 +1,9 @@
 # App
 
-Web-App der Maturaarbeit von Mattia Metzler
+Web-App entwickelt im Rahmen der Maturaarbeit von Mattia Metzler zum Thema "End-zu-End-Verschlüsselung für eine Messaging-Web-App" im Fach Informatik am Gymnasium Neufeld.  
+Betreuende Lehrperson: Marco Schmalz
 
-Unterstüzt durch [api-utils.py](https://github.com/smlz/poschtizeddel/blob/main/final/server/api_utils.py) von [smlz](https://github.com/smlz).
+Unterstüzt durch _api_utils.py_, geschrieben von Marco Schmalz.
 
 Alle Daten werden in den Dateien "data.json" und "users.json", welche im gleichen Ordner wie "app.py" erstellt werden, gespeichert.  
 **Benutzen auf eigenes Risiko!**
