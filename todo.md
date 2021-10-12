@@ -1,6 +1,5 @@
 # TODO
 #### App
-- [ ] Nonce generieren und übermitteln (vielleicht)
 - [x] Benachrichtigungen
 - [ ] Kommentare auf deutsch übersetzen:
     - [x] app.py
@@ -20,10 +19,10 @@
 - [ ] Alle Links überprüfen
 
 #### Sonstiges
-- [ ] Alle repos öffentlich schalten
+- [x] Alle repos öffentlich schalten
 - [ ] Umbennenungen (Namen in MA anpassen!):
-    - app.py &nbsp; --> &nbsp; server.py
-    - dummy.html &nbsp; --> &nbsp; app.html
-    - dummy_style.css &nbsp; --> &nbsp; app-style.css
-    - Github repo: Maturaarbeit-Back-End &nbsp; --> &nbsp; Maturaarbeit-App
-    - Entwurf.docx &nbsp; --> &nbsp; End_zu_End_Verschlüsselung_Mattia_Metzler.docx
+    - [ ] app.py &nbsp; --> &nbsp; server.py
+    - [ ] dummy.html &nbsp; --> &nbsp; app.html
+    - [ ] dummy_style.css &nbsp; --> &nbsp; app-style.css
+    - [x] Github repo: Maturaarbeit-Back-End &nbsp; --> &nbsp; Maturaarbeit-App
+    - [ ] Entwurf.docx &nbsp; --> &nbsp; End_zu_End_Verschlüsselung_Mattia_Metzler.docx
