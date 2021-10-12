@@ -1,9 +1,9 @@
 # TODO
 #### App
 - [x] Benachrichtigungen
-- [ ] Kommentare auf deutsch übersetzen:
+- [x] Kommentare auf deutsch übersetzen:
     - [x] app.py
-    - [ ] dummy.html
+    - [x] dummy.html
 - [x] Alle Aktionen (Schlüsselaustausch, Menu) mit colorLog in Konsole loggen
 
 <br>
@@ -13,10 +13,14 @@
     - [x] EventSource
     - [x] api_utils.py: PubSub
 
+<br>
+
 #### Schriftliche Arbeit
 - [x] Einleitung
 - [x] Überarbeiten + Blocksatz
 - [ ] Alle Links überprüfen
+
+<br>
 
 #### Sonstiges
 - [x] Alle repos öffentlich schalten
