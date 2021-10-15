@@ -1,6 +1,9 @@
 import collections
-# import crypt
-crypt = None;
+import platform
+if platform.system() == "Windows":
+    crypt = None
+else:
+    import crypt
 import datetime
 import functools
 import inspect
@@ -11,7 +14,12 @@ import sys
 import threading
 import traceback
 
-import werkzeug
+try:
+    import werkzeug
+except ImportError:
+    from os import system
+    system("pip install werkzeug")
+
 import werkzeug.routing
 from werkzeug.exceptions import (
     HTTPException,
