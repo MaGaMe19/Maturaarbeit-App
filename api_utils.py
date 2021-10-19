@@ -19,6 +19,7 @@ try:
 except ImportError:
     from os import system
     system("pip install werkzeug")
+    import werkzeug
 
 import werkzeug.routing
 from werkzeug.exceptions import (
