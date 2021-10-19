@@ -18,17 +18,17 @@
 #### Schriftliche Arbeit
 - [x] Einleitung
 - [x] Überarbeiten + Blocksatz
-- [ ] Alle Links überprüfen
+- [x] Alle Links überprüfen
 - [ ] Quellcode
-- [ ] Gendern (Abwechselnd, Abstract)
+- [x] Gendern (Abwechselnd, Abstract)
 
 <br>
 
 #### Sonstiges
 - [x] Alle repos öffentlich schalten
 - [ ] Umbennenungen (Namen in MA anpassen!):
-    - [ ] app.py &nbsp; --> &nbsp; server.py
-    - [ ] dummy.html &nbsp; --> &nbsp; app.html
-    - [ ] dummy_style.css &nbsp; --> &nbsp; app-style.css
+    - [x] app.py &nbsp; --> &nbsp; server.py
+    - [x] dummy.html &nbsp; --> &nbsp; app.html
+    - [x] dummy_style.css &nbsp; --> &nbsp; app-style.css
     - [x] Github repo: Maturaarbeit-Back-End &nbsp; --> &nbsp; Maturaarbeit-App
     - [ ] Entwurf.docx &nbsp; --> &nbsp; End_zu_End_Verschlüsselung_Mattia_Metzler.docx
