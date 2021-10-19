@@ -19,6 +19,8 @@
 - [x] Einleitung
 - [x] Überarbeiten + Blocksatz
 - [ ] Alle Links überprüfen
+- [ ] Quellcode
+- [ ] Gendern (Abwechselnd, Abstract)
 
 <br>
 
