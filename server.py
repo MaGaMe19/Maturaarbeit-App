@@ -1,3 +1,7 @@
+# | ================================================================================ |
+# | Published under the GNU GENERAL PUBLIC LICENSE. Copyright © 2021 Mattia Metzler. |
+# | ================================================================================ |
+
 import json
 import api_utils
 import os
