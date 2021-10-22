@@ -9,3 +9,5 @@ Für eine Anleitung zum Starten der Web-App siehe Kapitel B.1 in der [Maturaarbe
 
 Alle Daten werden in den Dateien "data.json" und "users.json", welche im gleichen Ordner wie "app.py" erstellt werden, gespeichert.  
 **Benutzen auf eigenes Risiko!**
+
+Diese Software wurde unter der GNU GENERAL PUBLIC LICENSE veröffentlicht. Copyright &copy; 2021 Mattia Metzler.
